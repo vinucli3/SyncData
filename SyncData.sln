@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34616.47
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SyncData", "SyncData.csproj", "{A301DC65-52CB-481B-AD3E-E7CA96094C5F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A301DC65-52CB-481B-AD3E-E7CA96094C5F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A301DC65-52CB-481B-AD3E-E7CA96094C5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A301DC65-52CB-481B-AD3E-E7CA96094C5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A301DC65-52CB-481B-AD3E-E7CA96094C5F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {80B60F8B-A957-480B-87F1-CEA434D90EFE}
+	EndGlobalSection
+EndGlobal

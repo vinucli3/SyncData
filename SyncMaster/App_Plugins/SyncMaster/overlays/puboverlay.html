@@ -1,0 +1,85 @@
+﻿<div ng-controller="pubOverlayController as vm">
+    <!--<div class="flex justify-center flex-column items-center">-->
+    <!--<i class="large icon {{vm.icon}}"></i>
+        <h3>{{vm.content}}</h3>
+    </div>-->
+    <input type="text" id="urlAddress" align="left" style="display:none" />
+    <div id="sapstage1" style="display: flex; gap: 10px;">
+        <div ng-repeat="t in vm.success">
+            <input class="Server" type="button" value="{{t.name}}" ng-click="vm.GetSelected(t)" ng-disabled="{{t.Status}}" />
+        </div>
+    </div>
+    <div id="sapstage2">
+        <div>
+            <input type="checkbox" id="child" name="vehicle1" value="Bike">
+            <label for="child">Include children</label>
+            <div>
+                <label for="child"> Include the children of the selected item</label>
+            </div>
+        </div>
+        <div>
+            <input type="checkbox" id="childDelete" name="vehicle1" value="Bike">
+            <label for="childDelete">Delete missing items</label>
+            <div>
+                <label for="childDelete">Remove any items on the target site that are not children of the selected item</label>
+            </div>
+        </div>
+    </div>
+    <div id="sapstage3">
+        <!--<textarea ng-model="myText" rows="1" class="changeDet"></textarea>-->
+        <!--<div id="sapstage2_1">-->
+        <!--<div data-element="editor-container" class="umb-editor-container umb-panel-body umb-scrollable row-fluid">
+            <umb-overlay-backdrop></umb-overlay-backdrop>-->
+        <div class="umb-pane">
+            <div class="umb-box-header">
+                <div class="umb-box-header-title">
+                    <div style="display: flex; gap: 95px;">
+                        <span>Content</span>
+                        <span>Updating 1/1 Items</span>
+                        <a ng-click="vm.showTable()">&#x25BC; Hide </a>
+                    </div>
+                </div>
+
+                <div id="sapstage3_2">
+                    <table class="table table-bordered table-hover" id="ServerTable">
+                        <tr>
+                            <td>
+                                <b></b>
+                            </td>
+                            <td>
+                                <b>
+                                    Change
+                                </b>
+                            </td>
+                            <td>
+                                <b>
+                                    Name
+                                </b>
+                            </td>
+                            <td>
+                                <b>
+
+                                </b>
+                            </td>
+                        </tr>
+                        <tr ng-repeat="x in nodeChanges">
+                            <td>
+                                <i class="icon-sync" style="color:orange"></i>
+                            </td>
+                            <td>
+                                {{x.change}}
+                            </td>
+                            <td>
+                                {{x.name}}
+                            </td>
+                            <td>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--</div>-->
+<!--</div>-->

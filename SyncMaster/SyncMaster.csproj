@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ContentTargetFolders>.</ContentTargetFolders>
+    <Product>SyncMaster</Product>
+    <PackageId>SyncMaster</PackageId>
+    <Title>SyncMaster</Title>
+    <Description>...</Description>
+    <PackageTags>umbraco plugin package</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Cms.Web.Website" Version="12.3.6" />
+    <PackageReference Include="Umbraco.Cms.Web.BackOffice" Version="12.3.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="App_Plugins\SyncMaster\**" ExcludeFromSingleFile="true" CopyToPublishDirectory="Always" />
+    <None Include="buildTransitive\**" Pack="true" PackagePath="buildTransitive" />
+  </ItemGroup>
+</Project>

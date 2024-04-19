@@ -1,0 +1,24 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <SyncMasterContentFilesPath>$(MSBuildThisFileDirectory)..\App_Plugins\SyncMaster\**\*.*</SyncMasterContentFilesPath>
+  </PropertyGroup>
+
+  <Target Name="CopySyncMasterAssets" BeforeTargets="BeforeBuild">
+    <ItemGroup>
+      <SyncMasterContentFiles Include="$(SyncMasterContentFilesPath)" />
+    </ItemGroup>
+    <Message Text="Copying SyncMaster files: $(SyncMasterContentFilesPath) - #@(SyncMasterContentFiles->Count()) files" Importance="high" />
+    <Copy SourceFiles="@(SyncMasterContentFiles)" DestinationFiles="@(SyncMasterContentFiles->'$(MSBuildProjectDirectory)\App_Plugins\SyncMaster\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="ClearSyncMasterAssets" BeforeTargets="Clean">
+    <ItemGroup>
+      <SyncMasterDir Include="$(MSBuildProjectDirectory)\App_Plugins\SyncMaster\" />
+    </ItemGroup>
+<ItemGroup>
+    <ProjectReference Include="$(MSBuildProjectDirectory)\SyncData.dll" />
+</ItemGroup>
+    <Message Text="Clear old SyncMaster data" Importance="high" />
+    <RemoveDir Directories="@(SyncMasterDir)" />
+  </Target>
+</Project>
