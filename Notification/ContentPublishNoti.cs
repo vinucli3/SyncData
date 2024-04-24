@@ -11,11 +11,59 @@ using Umbraco.Cms.Core.Notifications;
 
 namespace SyncData.Notification
 {
-	internal class ContentPublishNoti : INotificationHandler<ContentSavedNotification>
+	public class ContentPublish : INotificationHandler<ContentPublishedNotification>
 	{
 		private IContentSerialize _contentSerialize;
 		private readonly ILogger<UpdateContent> _logger;
-		public ContentPublishNoti(IContentSerialize contentSerialize, ILogger<UpdateContent> logger)
+		public ContentPublish(IContentSerialize contentSerialize, ILogger<UpdateContent> logger)
+		{
+			_contentSerialize = contentSerialize;
+			_logger = logger;
+		}
+
+		public void Handle(ContentPublishedNotification notification)
+		{
+			try
+			{
+
+				_contentSerialize.Handler();
+				_logger.LogInformation("Export Content Complete");
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError("Export error when save {ex}", ex);
+			}
+		}
+	}
+	public class TrashContent : INotificationHandler<ContentMovedToRecycleBinNotification>
+	{
+		private IContentSerialize _contentSerialize;
+		private readonly ILogger<UpdateContent> _logger;
+		public TrashContent(IContentSerialize contentSerialize, ILogger<UpdateContent> logger)
+		{
+			_contentSerialize = contentSerialize;
+			_logger = logger;
+		}
+
+		public void Handle(ContentMovedToRecycleBinNotification notification)
+		{
+			try
+			{
+				_contentSerialize.Handler();
+				_logger.LogInformation("Export Content Complete");
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError("Export error when save {ex}", ex);
+			}
+		}
+	}
+
+	public class RestoreContent : INotificationHandler<ContentSavedNotification>
+	{
+		private IContentSerialize _contentSerialize;
+		private readonly ILogger<UpdateContent> _logger;
+		public RestoreContent(IContentSerialize contentSerialize, ILogger<UpdateContent> logger)
 		{
 			_contentSerialize = contentSerialize;
 			_logger = logger;
@@ -24,7 +72,6 @@ namespace SyncData.Notification
 		{
 			try
 			{
-				
 				_contentSerialize.Handler();
 				_logger.LogInformation("Export Content Complete");
 			}
@@ -32,8 +79,54 @@ namespace SyncData.Notification
 			{
 				_logger.LogError("Export error when save {ex}", ex);
 			}
-			
+		}
+	}
 
+	public class MovedContent : INotificationHandler<ContentMovedNotification> // restore
+	{
+		private IContentSerialize _contentSerialize;
+		private readonly ILogger<UpdateContent> _logger;
+		public MovedContent(IContentSerialize contentSerialize, ILogger<UpdateContent> logger)
+		{
+			_contentSerialize = contentSerialize;
+			_logger = logger;
+		}
+
+		public void Handle(ContentMovedNotification notification)
+		{
+			try
+			{
+				_contentSerialize.Handler();
+				_logger.LogInformation("Export Content Complete");
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError("Export error when save {ex}", ex);
+			}
+		}
+	}
+
+	public class DeleteContent : INotificationHandler<ContentDeletedNotification> // restore
+	{
+		private IContentSerialize _contentSerialize;
+		private readonly ILogger<UpdateContent> _logger;
+		public DeleteContent(IContentSerialize contentSerialize, ILogger<UpdateContent> logger)
+		{
+			_contentSerialize = contentSerialize;
+			_logger = logger;
+		}
+		public void Handle(ContentDeletedNotification notification)
+		{
+			try
+			{
+				Array.ForEach(Directory.GetFiles("cSync\\Content\\"), File.Delete);
+				_contentSerialize.Handler();
+				_logger.LogInformation("Export Content Complete");
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError("Export error when save {ex}", ex);
+			}
 		}
 	}
 }

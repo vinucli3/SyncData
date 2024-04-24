@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using NUglify;
 using SyncData.Interface;
 using SyncData.Interface.Deserializers;
 using SyncData.Interface.Serializers;
@@ -234,14 +235,17 @@ namespace SyncData.Repository
 			var allPubUnPubContent = new List<IContent>();
 			var rootNodes = _contentService.GetRootContent();
 
-			var query = new Query<IContent>(_scopeProvider.SqlContext).Where(x => x.Published || x.Trashed);
+			var recycledContent = _contentService.GetPagedContentInRecycleBin(0, 100, out long total).ToList();
+
+			var query = new Query<IContent>(_scopeProvider.SqlContext).Where(x => x.Published && x.Trashed);
 
 			foreach (var c in rootNodes)
 			{
 				allPubUnPubContent.Add(c);
-				var descendants = _contentService.GetPagedDescendants(c.Id, 0, int.MaxValue, out long totalNodes, query);
+				var descendants = _contentService.GetPagedDescendants(c.Id, 0, int.MaxValue, out long totalNodes, null);
 				allPubUnPubContent.AddRange(descendants);
 			}
+			allPubUnPubContent.AddRange(recycledContent);
 
 			List<ContentDto> listCont = new List<ContentDto>();
 			foreach (var c in allPubUnPubContent)
@@ -382,14 +386,23 @@ namespace SyncData.Repository
 				XElement response = XElement.Load(file);
 				XElement? desroot = new XElement(response.Name, response.Attributes());
 
-				string? deskeyVal = root?.Attribute("Key")?.Value;
+				string? deskeyVal = desroot?.Attribute("Key")?.Value;
 				if (keyVal == deskeyVal)
 				{
-					System.IO.File.Delete(file);
+					 System.IO.File.Delete(file);
+					_logger.LogInformation("Delete {file}",file);
 					var nodeName = source?.Element("Info")?.Element("NodeName")?.Attribute("Default")?.Value;
-					response = source!;
+					response = source;
 					string path = "cSync\\Content\\" + nodeName?.Replace(" ", "-").ToLower() + ".config";
-					response?.Save(path);
+					if (!Directory.Exists(file)) {
+						response?.Save(path);
+						_logger.LogInformation("Save {file}", file);
+					}
+					else
+					{
+						_logger.LogInformation("File exist {file}", file);
+					}
+					
 					break;
 				}
 
@@ -402,14 +415,17 @@ namespace SyncData.Repository
 			var allPubUnPubContent = new List<IContent>();
 			var rootNodes = _contentService.GetRootContent();
 
-			var query = new Query<IContent>(_scopeProvider.SqlContext).Where(x => x.Published || x.Trashed);
+			var recycledContent = _contentService.GetPagedContentInRecycleBin(0, 100, out long total).ToList();
+
+			var query = new Query<IContent>(_scopeProvider.SqlContext).Where(x => x.Published && x.Trashed);
 
 			foreach (var c in rootNodes)
 			{
 				allPubUnPubContent.Add(c);
-				var descendants = _contentService.GetPagedDescendants(c.Id, 0, int.MaxValue, out long totalNodes, query);
+				var descendants = _contentService.GetPagedDescendants(c.Id, 0, int.MaxValue, out long totalNodes, null);
 				allPubUnPubContent.AddRange(descendants);
 			}
+			allPubUnPubContent.AddRange(recycledContent);
 
 			var node = allPubUnPubContent.Where(x => x.Key == id).FirstOrDefault();
 			string path = "";
@@ -433,16 +449,73 @@ namespace SyncData.Repository
 			return path;
 
 		}
-		public async Task<bool> UpdateNode()
+		public async Task<bool> UpdateNode(XElement source)
 		{
+			XElement? root = new XElement(source.Name, source.Attributes());
+			string? keyVal = root?.Attribute("Key")?.Value;
+
+			var children = source.Elements().ToList();
+			var infoChild = children[0].Elements().ToList();
+			var propChild = children[1].Elements().ToList();
+
+			var node = _contentService.GetById(new Guid(keyVal));
+			var nodeProp = node.Properties.ToList();
+
+			foreach (var prop in propChild)
+			{
+				var nodpr = node.Properties.Where(x => x.Alias == prop.Name.ToString()).FirstOrDefault();
+				nodpr.SetValue(prop.Value);
+			}
+			if (node.Published)
+			{
+				_contentService.SaveAndPublish(node);
+			}
+			else
+			{
+				_contentService.Save(node);
+			}
+
 			return true;
 		}
 		public bool DeleteNode()
 		{
 			return true;
 		}
-		public bool CreateNode()
+		public async Task<bool> CreateNode(XElement source)
 		{
+			XElement? root = new XElement(source.Name, source.Attributes());
+			string? keyVal = root?.Attribute("Key")?.Value;
+
+			string mainPath = "cSync\\Content";
+			string[] files = Directory.GetFiles(mainPath);
+			foreach (string file in files)
+			{
+				XElement response = XElement.Load(file);
+				XElement? desroot = new XElement(response.Name, response.Attributes());
+
+				string? deskeyVal = desroot?.Attribute("Key")?.Value;
+				if (keyVal == deskeyVal)
+				{
+					System.IO.File.Delete(file);
+					_logger.LogInformation("Delete {file}", file);
+					var nodeName = source?.Element("Info")?.Element("NodeName")?.Attribute("Default")?.Value;
+					response = source;
+					string path = "cSync\\Content\\" + nodeName?.Replace(" ", "-").ToLower() + ".config";
+					if (!Directory.Exists(file))
+					{
+						response?.Save(path);
+						_logger.LogInformation("Save {file}", file);
+					}
+					else
+					{
+						_logger.LogInformation("File exist {file}", file);
+					}
+
+					break;
+				}
+
+			}
+			await _contentDeserialize.Handler();
 			return true;
 		}
 	}

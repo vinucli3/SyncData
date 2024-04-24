@@ -22,8 +22,10 @@ namespace SyncData.Composers
 		public void Handle(MenuRenderingNotification notification)
 		{
 			// this example will add a custom menu item for all admin users
-			
-			// for all content tree nodes
+			if(notification.NodeId == "-20")
+			{
+				return;
+			}			// for all content tree nodes
 			if (notification.TreeAlias.Equals("content") &&
 				_backOfficeSecurityAccessor.BackOfficeSecurity.CurrentUser.IsAdmin())
 			{

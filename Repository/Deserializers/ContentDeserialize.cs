@@ -41,23 +41,26 @@ namespace SyncData.Repository.Deserializers
 			_scopeprovider = scopeProvider;
 			_memberGroupService = memberGroupService;
 		}
-
 		public async Task<bool> Handler()
 		{
 			try
 			{
-				////Delete all//////
+				////Collect all//////
 				var allPubUnPubContent = new List<IContent>();
 				var rootNodes = _contentService.GetRootContent();
 
-				var query = new Query<IContent>(_scopeprovider.SqlContext).Where(x => x.Published || x.Trashed);
+				var recycledContent = _contentService.GetPagedContentInRecycleBin(0, 100, out long total).ToList();
+
+				var query = new Query<IContent>(_scopeprovider.SqlContext).Where(x => x.Published && x.Trashed);
 
 				foreach (var c in rootNodes)
 				{
 					allPubUnPubContent.Add(c);
-					var descendants = _contentService.GetPagedDescendants(c.Id, 0, int.MaxValue, out long totalNodes, query);
+					var descendants = _contentService.GetPagedDescendants(c.Id, 0, int.MaxValue, out long totalNodes, null);
 					allPubUnPubContent.AddRange(descendants);
 				}
+				allPubUnPubContent.AddRange(recycledContent);
+				////Delete all//////
 				foreach (var item in allPubUnPubContent)
 				{
 					_contentService.Delete(item);
@@ -178,8 +181,10 @@ namespace SyncData.Repository.Deserializers
 			}
 			newContent.SortOrder = Convert.ToInt16(sortOrder);
 			newContent.Key = new Guid(keyVal);
+			
 			ITemplate? template = _fileService.GetTemplate(new Guid(templateKey));
 			newContent.TemplateId = template?.Id;
+			
 			if (Convert.ToBoolean(publishedNode))
 			{
 				try

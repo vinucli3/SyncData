@@ -19,7 +19,11 @@ namespace SyncData.Composers
 			var conString = builder.Config.GetConnectionString("umbracoDbDSN");
 			builder.AddNotificationHandler<ServerVariablesParsingNotification, cSyncServerVariablesHandler>();
 			builder.Services.AddScoped<IUpdateContent, UpdateContent>();
-			builder.AddNotificationHandler<ContentSavedNotification, ContentPublishNoti>();
+			builder.AddNotificationHandler<ContentPublishedNotification, ContentPublish>();
+			builder.AddNotificationHandler<ContentMovedToRecycleBinNotification, TrashContent>();
+			builder.AddNotificationHandler<ContentSavedNotification, RestoreContent>();
+			builder.AddNotificationHandler<ContentMovedNotification, MovedContent>();
+			builder.AddNotificationHandler<ContentDeletedNotification, DeleteContent>();
 			builder.AddNotificationHandler<MenuRenderingNotification, MenuEventHandler>();
 			builder.Services.AddUmbracoDbContext<ServerContext>(options =>
 			{

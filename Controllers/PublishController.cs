@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
 using Newtonsoft.Json;
+using NUglify;
 using SyncData.Interface;
 using SyncData.Model;
 using System.Text.Json;
@@ -127,13 +128,17 @@ namespace SyncData.Controllers
 			bool g = await _updateContent.SolveDifference(source.X1);
 			return Ok(JsonConvert.SerializeObject(g));
 		}
-
+		[HttpPost]
+		public async Task<IActionResult> UpdateNode(XElement source)
+		{
+			bool g = await _updateContent.UpdateNode(source);
+			return Ok();
+		}
 		[HttpGet]
 		public IActionResult ImageProcess([FromQuery] Guid id)
 		{
 			try
 			{
-
 				var response = _updateContent.ImageProcess(id);
 				if (response == null)
 				{

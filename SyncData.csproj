@@ -8,6 +8,7 @@
     <PackageId></PackageId>
     <Authors></Authors>
     <Company></Company>
+	  <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <ItemGroup>

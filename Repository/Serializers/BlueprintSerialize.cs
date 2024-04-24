@@ -38,17 +38,20 @@ namespace SyncData.Repository.Serializers
 			try
 			{
 
-				List<IContent>? allPubUnPubContent = new List<IContent>();
-				IEnumerable<IContent>? rootNodes = _contentService.GetRootContent();
+				var allPubUnPubContent = new List<IContent>();
+				var rootNodes = _contentService.GetRootContent();
 
-				IQuery<IContent>? query = new Query<IContent>(_scopeprovider.SqlContext).Where(x => x.Published || x.Trashed);
+				var recycledContent = _contentService.GetPagedContentInRecycleBin(0, 100, out long total).ToList();
+
+				var query = new Query<IContent>(_scopeprovider.SqlContext).Where(x => x.Published && x.Trashed);
 
 				foreach (var c in rootNodes)
 				{
 					allPubUnPubContent.Add(c);
-					IEnumerable<IContent>? descendants = _contentService.GetPagedDescendants(c.Id, 0, int.MaxValue, out long totalNodes, query);
+					var descendants = _contentService.GetPagedDescendants(c.Id, 0, int.MaxValue, out long totalNodes, null);
 					allPubUnPubContent.AddRange(descendants);
 				}
+				allPubUnPubContent.AddRange(recycledContent);
 
 				var bluePrints = _contentService.GetBlueprintsForContentTypes(
 					allPubUnPubContent.Select(x => x.ContentTypeId).ToArray()).ToList();
