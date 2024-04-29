@@ -19,5 +19,8 @@ namespace SyncData.Interface
 		public Task<List<DiffObject>> FindDiffNodes(DiffXelements nodes);
         public Task<bool> SolveDifference(XElement source);
 		public Task<bool> UpdateNode(XElement source);
+		public Task<bool> CreateNode(XElement source);
+		public Task<bool> DeleteNode(XElement source);
 	}
+	
 }

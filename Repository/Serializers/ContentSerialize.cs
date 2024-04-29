@@ -37,12 +37,10 @@ namespace SyncData.Repository.Serializers
 		{
 			try
 			{
-				////Collect all//////
+				//Collect all
 				var allPubUnPubContent = new List<IContent>();
 				var rootNodes = _contentService.GetRootContent();
-
 				var recycledContent = _contentService.GetPagedContentInRecycleBin(0, 100, out long total).ToList();
-
 				var query = new Query<IContent>(_scopeprovider.SqlContext).Where(x => x.Published && x.Trashed);
 
 				foreach (var c in rootNodes)
@@ -59,17 +57,27 @@ namespace SyncData.Repository.Serializers
 						new XAttribute("Key", node.Key),
 						new XAttribute("Level", node.Level),
 						new XAttribute("Alias", node.Name));
+					ITemplate template = null;
 					if (!node.TemplateId.HasValue)
 					{
 						var name = node.Name;
 						_logger.LogError("No template available for the node {name}", name);
-						continue;
+						
 					}
-					ITemplate template = _fileService.GetTemplate(node.TemplateId.Value);
+					else template = _fileService.GetTemplate(node.TemplateId.Value).IfNull(null);
 					IContent parentCont = _contentService.GetById(node.ParentId);
 					ContentScheduleCollection? schDetail = _contentService.GetContentScheduleByContentId(node.Id);
-					ContentSchedule? fullSch = schDetail?.FullSchedule?.FirstOrDefault();
+					var allSchedule = schDetail?.FullSchedule?.ToList();
 					string? pathVal = (parentCont != null ? "/" + parentCont.Name.Replace(" ", "") : "") + "/" + node.Name.Replace(" ", "");
+					var schX = new XElement("Schedule");
+					foreach (var schedule in allSchedule)
+					{
+						var scd = new XElement("ContentSchedule",
+							new XElement("Culture", schedule?.Culture),
+							new XElement("Action", schedule?.Action),
+							new XElement("Date", schedule?.Date));
+						schX.Add(scd);
+					}
 
 					XElement info =
 							new XElement("Info",
@@ -82,12 +90,10 @@ namespace SyncData.Repository.Serializers
 							new XElement("NodeName", new XAttribute("Default", node?.Name)),
 								new XElement("SortOrder", node.SortOrder),
 							new XElement("Published", new XAttribute("Default", node.Published)),
-							new XElement("Schedule", fullSch != null ? new XElement("ContentSchedule",
-							new XElement("Culture", fullSch?.Culture),
-							new XElement("Action", fullSch?.Action),
-							new XElement("Date", fullSch?.Date)) : null),
-							new XElement("Template", new XAttribute("Key", template.Key), template.Name)
+							schX,
+							new XElement("Template", template !=null ? new XAttribute("Key", template.Key) : "", template != null ? template.Name: null)
 							);
+
 					XElement properties = new XElement("Properties");
 					foreach (var prop in node.Properties)
 					{
@@ -122,16 +128,20 @@ namespace SyncData.Repository.Serializers
 					else
 					{
 						string[] fyles = Directory.GetFiles(folder);
-
+						_logger.LogInformation("Collect all file");
 						foreach (string file in fyles)
 						{
+							_logger.LogInformation("Check Files");
 							XElement response = XElement.Load(file);
 							XElement? root = new XElement(response.Name, response.Attributes());
 
 							string? keyVal = root.Attribute("Key").Value;
 							if (node.Key == new Guid(keyVal))
 							{
-								System.IO.File.Delete(file); break;
+								_logger.LogInformation("Select file");
+								System.IO.File.Delete(file);
+								_logger.LogInformation("Exist file deleted");
+								break;
 							}
 						}
 					}

@@ -83,7 +83,7 @@ namespace SyncData.Repository.Deserializers
 			}
 		}
 		List<string> fileList = new List<string>();
-		void creatContent(string file)
+		public async Task creatContent(string file)
 		{
 			XElement response = XElement.Load(file);
 			XElement? root = new XElement(response.Name, response.Attributes());
@@ -104,9 +104,7 @@ namespace SyncData.Repository.Deserializers
 			string? sortOrder = response.Element("Info").Element("SortOrder").Value;
 			string? publishedNode = response.Element("Info")?.Element("Published").Attribute("Default").Value;
 
-			XElement? templateNode = response.Element("Info")?.Element("Template");
-			string? templateKey = templateNode.Attribute("Key").Value;
-			string? templateValue = templateNode.Value;
+			
 			if (new Guid(parentKeyVal) != Guid.Empty)
 			{
 				foreach (var item in fileList)
@@ -122,7 +120,6 @@ namespace SyncData.Repository.Deserializers
 				}
 			}
 
-			Guid parentId = Guid.Parse(parentKeyVal);
 			IContent? parentNode = _contentService.GetById(new Guid(parentKeyVal));
 			// Create a new child item of type 'Product'
 			IContent? newContent = _contentService.Create(nodeName, parentNode != null ? parentNode.Id : -1, contentType);
@@ -165,6 +162,7 @@ namespace SyncData.Repository.Deserializers
 			List<XElement>? schedule = response.Element("Info").Element("Schedule").Elements().ToList();
 			if (schedule.Count != 0)
 			{
+				ContentScheduleCollection? contentScheduleCollection = new ContentScheduleCollection();
 				foreach (XElement item in schedule)
 				{
 					string? culture = item.Element("Culture").Value;
@@ -174,16 +172,24 @@ namespace SyncData.Repository.Deserializers
 					ContentSchedule sched = new ContentSchedule(culture,
 						actualDate,
 						(ContentScheduleAction)Enum.Parse(typeof(ContentScheduleAction), action));
-					ContentScheduleCollection? contentScheduleCollection = new ContentScheduleCollection();
+					
 					contentScheduleCollection.Add(sched);
 					_contentService.Save(newContent, contentSchedule: contentScheduleCollection);
 				}
 			}
 			newContent.SortOrder = Convert.ToInt16(sortOrder);
 			newContent.Key = new Guid(keyVal);
+			var existTempl = response.Element("Info")?.Element("Template").Value;
+			if (!existTempl.IsNullOrWhiteSpace())
+			{
+				XElement? templateNode = response.Element("Info")?.Element("Template");
+				string? templateKey = templateNode.Attribute("Key").Value;
+				string? templateValue = templateNode.Value;
+
+				ITemplate? template = _fileService.GetTemplate(new Guid(templateKey));
+				newContent.TemplateId = template?.Id;
+			}
 			
-			ITemplate? template = _fileService.GetTemplate(new Guid(templateKey));
-			newContent.TemplateId = template?.Id;
 			
 			if (Convert.ToBoolean(publishedNode))
 			{
@@ -199,6 +205,11 @@ namespace SyncData.Repository.Deserializers
 			else
 			{
 				_contentService.Save(newContent);
+			}
+
+			if(Convert.ToBoolean(trashed))
+			{
+				_contentService.MoveToRecycleBin(newContent);
 			}
 		}
 	}

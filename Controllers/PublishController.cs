@@ -100,6 +100,18 @@ namespace SyncData.Controllers
 		{
 			return Ok(await _updateContent.CollectExistingNodes());
 		}
+		[HttpPost]
+		public async Task<IActionResult> FindDifferences([FromBody] DiffXelements nodes)
+		{
+			return Ok(JsonConvert.SerializeObject(await _updateContent.FindDiffNodes(nodes)));
+		}
+
+		[HttpPost]
+		public async Task<IActionResult> ClearDifferences(DiffXelements source)
+		{
+			bool g = await _updateContent.SolveDifference(source.X1);
+			return Ok(JsonConvert.SerializeObject(g));
+		}
 
 		[HttpGet]
 		public async Task<IActionResult> GetNode([FromQuery] string id)
@@ -116,24 +128,26 @@ namespace SyncData.Controllers
 			}
 
 		}
-		[HttpPost]
-		public async Task<IActionResult> FindDifferences([FromBody] DiffXelements nodes)
-		{
-			return Ok(JsonConvert.SerializeObject(await _updateContent.FindDiffNodes(nodes)));
-		}
 
 		[HttpPost]
-		public async Task<IActionResult> ClearDifferences(DiffXelements source)
+		public async Task<IActionResult> CreateNode(XElement source)
 		{
-			bool g = await _updateContent.SolveDifference(source.X1);
-			return Ok(JsonConvert.SerializeObject(g));
+			bool g = await _updateContent.CreateNode(source);
+			return Ok();
 		}
-		[HttpPost]
+		[HttpPut]
 		public async Task<IActionResult> UpdateNode(XElement source)
 		{
 			bool g = await _updateContent.UpdateNode(source);
 			return Ok();
 		}
+		[HttpDelete]
+		public async Task<IActionResult> DeleteNode(XElement source)
+		{
+			bool g = await _updateContent.DeleteNode(source);
+			return Ok();
+		}
+
 		[HttpGet]
 		public IActionResult ImageProcess([FromQuery] Guid id)
 		{

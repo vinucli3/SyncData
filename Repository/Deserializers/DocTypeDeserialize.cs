@@ -96,16 +96,23 @@ namespace SyncData.Repository.Deserializers
 				nameComposition = composition.Value ?? "";
 				keyComposition = composition.Attribute("Key")?.Value ?? "";
 			}
-			string? defaultTemplate = info?.Element("DefaultTemplate")?.Value ?? "";
+			string? defaultTemplateVal = info?.Element("DefaultTemplate")?.Value ?? "";
 
 			IEnumerable<XElement>? allowedTemplate = info?.Element("AllowedTemplates").Elements();
 			string? templName = ""; string? templKey = "";
+			List<ITemplate?> masterDetail = null;
+			ITemplate defaultTemplate = null;
 			if (!allowedTemplate.IsNullOrEmpty())
 			{
 				foreach (XElement template in allowedTemplate)
 				{
 					templName = template.Value ?? "";
 					templKey = template.Attribute("Key")?.Value ?? "";
+					masterDetail.Add(_fileService.GetTemplate(new Guid(templKey)));
+					if(defaultTemplateVal == templName)
+					{
+						defaultTemplate = _fileService.GetTemplate(new Guid(templKey));
+					}
 				}
 			}
 
@@ -192,6 +199,7 @@ namespace SyncData.Repository.Deserializers
 				}
 				List<ContentTypeSort>? contentTypeSorts = new List<ContentTypeSort>();
 				IEnumerable<XElement>? allowdContent = readFile.Element("Structure").Elements();
+
 				foreach (XElement content in allowdContent)
 				{
 					string? key = content.Attribute("Key").Value ?? "";
@@ -236,9 +244,9 @@ namespace SyncData.Repository.Deserializers
 				{
 					compositionsToAdd.Add(myComp);
 				}
-				ITemplate? masterDetail = null;
-				if (templKey != "")
-					masterDetail = _fileService.GetTemplate(new Guid(templKey));
+				
+			
+					
 
 				IContentType newCT = _contentTypeService.Get(name);
 				if (newCT == null)
@@ -262,7 +270,8 @@ namespace SyncData.Repository.Deserializers
 							PreventCleanup = Convert.ToBoolean(preventCleanup)
 						},
 						PropertyGroups = propColl,
-						AllowedTemplates = _fileService.GetTemplates(masterDetail != null ? masterDetail.Alias : ""),
+						AllowedTemplates = masterDetail,
+						DefaultTemplateId = defaultTemplate.Id,
 						ContentTypeComposition = compositionsToAdd,
 						AllowedContentTypes = contentTypeSorts
 					};

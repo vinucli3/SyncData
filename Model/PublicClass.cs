@@ -50,5 +50,15 @@ namespace SyncData.Model
 		public string PropOldValue { get; set; }
 		public string PropCurrValue {  get; set; }
 		public string PropAction { get; set; }
+		public string PropType { get; set; }
+	}
+	
+	public class AcknowDTO
+	{
+		public string Item { get; set; }
+		public int ItemCount { get; set; }
+		public int ItemChanges { get; set; }
+		public int ItemErrors { get; set; }
+
 	}
 }
