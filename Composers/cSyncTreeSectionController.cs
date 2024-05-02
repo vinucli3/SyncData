@@ -14,11 +14,11 @@ namespace SyncData.Composers
 {
     [Tree("settings", "syncAlias", TreeTitle = "cSync", TreeGroup = "cGroup", SortOrder = 5)]
     [PluginController("cSyncMaster")]
-    public class SyncController : TreeController
+    public class cSyncTreeSectionController : TreeController
     {
         private readonly IMenuItemCollectionFactory _menuItemCollectionFactory;
 
-        public SyncController(ILocalizedTextService localizedTextService,
+        public cSyncTreeSectionController(ILocalizedTextService localizedTextService,
             UmbracoApiControllerTypeCollection umbracoApiControllerTypeCollection,
             IMenuItemCollectionFactory menuItemCollectionFactory,
             IEventAggregator eventAggregator)

@@ -13,11 +13,11 @@ namespace SyncData.Composers
 {
     [Tree("settings", "publishAlias", TreeTitle = "cSync Publisher", TreeGroup = "cGroup", SortOrder = 5)]
     [PluginController("cSyncMaster")]
-    public class cSyncPublishController : TreeController
+    public class cSyncPubTreeSectionController : TreeController
     {
         private readonly IMenuItemCollectionFactory _menuItemCollectionFactory;
 
-        public cSyncPublishController(ILocalizedTextService localizedTextService,
+        public cSyncPubTreeSectionController(ILocalizedTextService localizedTextService,
             UmbracoApiControllerTypeCollection umbracoApiControllerTypeCollection,
             IMenuItemCollectionFactory menuItemCollectionFactory,
             IEventAggregator eventAggregator)
@@ -90,7 +90,7 @@ namespace SyncData.Composers
             root.RoutePath = string.Format("{0}/{1}/{2}", Constants.Applications.Settings, "syncAlias", "publish");
             //root.RoutePath = string.Format("{0}/{1}/{2}", "favouriteThings", "favouriteThingsAlias", "overview");
             // set the icon
-            root.Icon = "icon-sync";
+            root.Icon = "icon-truck";
             // could be set to false for a custom tree with a single node.
             root.HasChildren = true;
             //url for menu

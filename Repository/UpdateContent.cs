@@ -42,6 +42,7 @@ namespace SyncData.Repository
 		private readonly IScopeProvider _scopeProvider;
 		private IContentDeserialize _contentDeserialize;
 		private IFileService _fileService;
+		private IMemberGroupService _memberGroupService;
 		List<DiffObject> diffArray = new List<DiffObject>();
 		public UpdateContent(IContentSerialize contentSerialize,
 			IPublishedContentQuery publishedContent,
@@ -55,7 +56,8 @@ namespace SyncData.Repository
 			IContentDeserialize contentDeserialize,
 			MediaUrlGeneratorCollection mediaUrlGenerators,
 			IScopeProvider scopeProvider,
-			IFileService fileService)
+			IFileService fileService,
+			IMemberGroupService memberGroupService)
 		{
 			_logger = logger;
 			_publishedContent = publishedContent;
@@ -70,6 +72,7 @@ namespace SyncData.Repository
 			_contentSerialize = contentSerialize;
 			_contentDeserialize = contentDeserialize;
 			_fileService = fileService;
+			_memberGroupService = memberGroupService;
 		}
 		public async Task<MediaNameKey> ImageProcess(Guid id)
 		{
@@ -485,6 +488,14 @@ namespace SyncData.Repository
 			foreach (var prop in propChild)
 			{
 				var nodpr = node.Properties.Where(x => x.Alias == prop.Name.ToString()).FirstOrDefault();
+				if (nodpr.PropertyType.PropertyEditorAlias == "Umbraco.MemberGroupPicker")
+				{
+					var memberGRp = _memberGroupService.GetByName(prop.Value);
+
+					if (memberGRp != null)
+						nodpr.SetValue(memberGRp.Id);
+				}
+				else
 				nodpr.SetValue(prop.Value);
 			}
 

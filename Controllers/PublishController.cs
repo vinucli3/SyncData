@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using NUglify;
 using SyncData.Interface;
 using SyncData.Model;
+using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Xml.Linq;
@@ -90,9 +91,26 @@ namespace SyncData.Controllers
 
 		[AllowAnonymous]
 		[HttpGet]
-		public IActionResult HeartBeat()
+		public IActionResult HeartBeat([FromQuery] string url)
 		{
-			return new OkObjectResult(1);
+			try
+			{
+				_logger.LogInformation(url);
+				//Creating the HttpWebRequest
+				HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
+				//Setting the Request method HEAD, you can also use GET too.
+				request.Method = "HEAD";
+				//Getting the Web Response.
+				HttpWebResponse response = request.GetResponse() as HttpWebResponse;
+				//Returns TRUE if the Status code == 200
+				response.Close();
+				return Ok(HttpStatusCode.OK);
+			}
+			catch
+			{
+				//Any exception will returns false.
+				return Ok(HttpStatusCode.NotFound);
+			}
 		}
 
 		[HttpGet]

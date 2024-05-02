@@ -31,7 +31,7 @@ namespace SyncData.Composers
 			{
 				throw new ArgumentException("Invalid umbracoUrls");
 			}
-			var publish = _linkGenerator.GetUmbracoApiServiceBaseUrl<PublishController>(x=>x.HeartBeat());
+			var publish = _linkGenerator.GetUmbracoApiServiceBaseUrl<PublishController>(x => x.HeartBeat(""));
 			var export = _linkGenerator.GetUmbracoApiServiceBaseUrl<ExportController>(x => x.HeartBeat());
 			var import = _linkGenerator.GetUmbracoApiServiceBaseUrl<ImportController>(x => x.HeartBeat());
 			//serverVariables.Add("uSyncHistory", (object)mylink);

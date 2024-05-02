@@ -68,7 +68,24 @@ namespace SyncData.Repository.Serializers
 					IContent parentCont = _contentService.GetById(node.ParentId);
 					ContentScheduleCollection? schDetail = _contentService.GetContentScheduleByContentId(node.Id);
 					var allSchedule = schDetail?.FullSchedule?.ToList();
-					string? pathVal = (parentCont != null ? "/" + parentCont.Name.Replace(" ", "") : "") + "/" + node.Name.Replace(" ", "");
+					string oPath = "";
+					var pathSplit = node.Path.Split(",");
+					foreach (var d in pathSplit)
+					{
+						if (d == "-1")
+						{
+							oPath += "/";
+						}
+						else if (d == "-20")
+						{
+							oPath += "[-20]/";
+						}
+						else
+						{
+							var Pnode = _contentService.GetById(Convert.ToInt16(d));
+							oPath += Pnode.Name.Replace(" ", "") + (pathSplit.IndexOf(d) != pathSplit.Length - 1 ? "/" : "");
+						}
+					}
 					var schX = new XElement("Schedule");
 					foreach (var schedule in allSchedule)
 					{
@@ -83,7 +100,7 @@ namespace SyncData.Repository.Serializers
 							new XElement("Info",
 							new XElement("Parent",
 								new XAttribute("Key", parentCont != null ? parentCont.Key : Guid.Empty), parentCont != null ? parentCont.Name : ""),
-							new XElement("Path", pathVal),
+							new XElement("Path", oPath),
 							new XElement("Trashed", node.Trashed),
 							new XElement("ContentType", node.ContentType.Alias),
 								new XElement("CreateDate", node.CreateDate),
