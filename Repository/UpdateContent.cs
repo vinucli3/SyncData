@@ -44,6 +44,7 @@ namespace SyncData.Repository
 		private IFileService _fileService;
 		private IMemberGroupService _memberGroupService;
 		List<DiffObject> diffArray = new List<DiffObject>();
+		private IRelationService _relationService;
 		public UpdateContent(IContentSerialize contentSerialize,
 			IPublishedContentQuery publishedContent,
 			IMediaService mediaService,
@@ -57,7 +58,8 @@ namespace SyncData.Repository
 			MediaUrlGeneratorCollection mediaUrlGenerators,
 			IScopeProvider scopeProvider,
 			IFileService fileService,
-			IMemberGroupService memberGroupService)
+			IMemberGroupService memberGroupService,
+			IRelationService relationService)
 		{
 			_logger = logger;
 			_publishedContent = publishedContent;
@@ -73,6 +75,7 @@ namespace SyncData.Repository
 			_contentDeserialize = contentDeserialize;
 			_fileService = fileService;
 			_memberGroupService = memberGroupService;
+			_relationService = relationService;
 		}
 		public async Task<MediaNameKey> ImageProcess(Guid id)
 		{
@@ -481,8 +484,40 @@ namespace SyncData.Repository
 			var children = source.Elements().ToList();
 			var infoChild = children[0].Elements().ToList();
 			var propChild = children[1].Elements().ToList();
+			string? parentKeyVal = source.Element("Info").Element("Parent").Attribute("Key").Value;
+			string? trashed = source.Element("Info").Element("Trashed").Value;
+			string? nodeName = source.Element("Info").Element("NodeName").Attribute("Default").Value;
+			string? sortOrder = source.Element("Info").Element("SortOrder").Value;
+			string? publishedNode = source.Element("Info")?.Element("Published").Attribute("Default").Value;
+			var existTempl = source.Element("Info")?.Element("Template").Value;
 
 			var node = _contentService.GetById(new Guid(keyVal));
+
+			if (node.Trashed == false && Convert.ToBoolean(trashed) == true)
+			{
+				_logger.LogInformation("move to recyclebin");
+				_contentService.MoveToRecycleBin(node);
+			}
+			if (node.Trashed == true && Convert.ToBoolean(trashed) == false)
+			{
+				List<IContent>? recycledContent = _contentService.GetPagedContentInRecycleBin(0, 100, out long total).ToList();
+				_logger.LogInformation("restore A1");
+				foreach (var content in recycledContent)
+				{
+					_logger.LogInformation("restore A2");
+					if (node.Key == content.Key)
+					{
+						_logger.LogInformation("restore A3");
+						var relation = _relationService.GetByChildId(content.Id).FirstOrDefault();
+						if (relation != null)
+						{
+							_logger.LogInformation("restore node");
+							_contentService.Move(node, relation.ParentId);
+						}
+					}
+
+				}
+			}
 
 			var nodeProp = node.Properties.ToList();
 			foreach (var prop in propChild)
@@ -499,18 +534,14 @@ namespace SyncData.Repository
 				nodpr.SetValue(prop.Value);
 			}
 
-			string? parentKeyVal = source.Element("Info").Element("Parent").Attribute("Key").Value;
-			string? trashed = source.Element("Info").Element("Trashed").Value;
-			string? nodeName = source.Element("Info").Element("NodeName").Attribute("Default").Value;
-			string? sortOrder = source.Element("Info").Element("SortOrder").Value;
-			string? publishedNode = source.Element("Info")?.Element("Published").Attribute("Default").Value;
-			var existTempl = source.Element("Info")?.Element("Template").Value;
+			
 
 
 			if (new Guid(parentKeyVal) != Guid.Empty)
 			{
 				IContent? parentNode = _contentService.GetById(new Guid(parentKeyVal));
 				node.ParentId = parentNode.Id;
+				
 			}
 			node.Name = nodeName;
 			node.SortOrder = Convert.ToInt16(sortOrder);
@@ -526,7 +557,9 @@ namespace SyncData.Repository
 			if (Convert.ToBoolean(publishedNode))
 				_contentService.SaveAndPublish(node);
 			else
-				_contentService.Unpublish(node);
+				_contentService.Save(node);
+
+			
 
 			ContentScheduleCollection? contentScheduleCollection = new ContentScheduleCollection();
 			List<XElement>? schedule = source.Element("Info").Element("Schedule").Elements().ToList();
@@ -546,13 +579,12 @@ namespace SyncData.Repository
 					contentScheduleCollection.Add(sched);
 
 				}
+				_contentService.Save(node, contentSchedule: contentScheduleCollection);
 			}
-			_contentService.Save(node, contentSchedule: contentScheduleCollection);
+			
 
-			if (Convert.ToBoolean(trashed))
-			{
-				_contentService.MoveToRecycleBin(node);
-			}
+			
+
 
 			return true;
 		}
