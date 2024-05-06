@@ -34,7 +34,7 @@ namespace SyncData.Repository.Serializers
 				{
 					XElement contentDetail = new XElement("ContentType", new XAttribute("Key", contentType.Key), new XAttribute("Alias", contentType.Alias), new XAttribute("Level", contentType.Level));
 					EntityContainer container = _contentTypeService.GetContainer(contentType.ParentId);
-					IEnumerable<IPropertyType>? getProperties = contentType.CompositionPropertyTypes.OrderBy(x => x.Alias).ToList();
+
 					IContentTypeComposition? compositionAliases = contentType.ContentTypeComposition.FirstOrDefault();
 
 					XElement info =
@@ -53,37 +53,51 @@ namespace SyncData.Repository.Serializers
 							new XElement("Folder", container?.Name),
 							new XElement("Compositions", compositionAliases != null ? new XElement("Composition",
 							new XAttribute("Key", compositionAliases?.Key == null ? "" : compositionAliases.Key), compositionAliases?.Alias) : compositionAliases),
-							new XElement("DefaultTemplate", contentType?.DefaultTemplate?.Name == null ? "" : contentType?.DefaultTemplate),
+							new XElement("DefaultTemplate", contentType?.DefaultTemplate == null ? "" : contentType?.DefaultTemplate.Alias),
 							new XElement("AllowedTemplates", contentType.AllowedTemplates.Count() != 0 ? new XElement("Template",
 							new XAttribute("Key", contentType.AllowedTemplates.Select(x => x.Key).FirstOrDefault()),
 							contentType.AllowedTemplates.Select(x => x.Alias).FirstOrDefault()) : contentType.AllowedTemplates
 							));
 
 					contentDetail.Add(info);
-					PropertyGroup? tab = contentType.PropertyGroups.First();
-					XElement genericProperties =
-								new XElement("GenericProperties", "");
+					var tabs = contentType.PropertyGroups;
+					XElement tabDetail = new XElement("Tabs", "");
+					XElement genericProperties = new XElement("GenericProperties", "");
 
-					foreach (IPropertyType item in getProperties)
+					foreach (var tab in tabs)
 					{
-						if (compositionAliases != null) if (item.Key == compositionAliases.CompositionPropertyTypes.FirstOrDefault().Key) continue;
-						XElement genericProperty = new XElement("GenericProperty",
-							new XElement("Key", item.Key),
-							new XElement("Name", item.Name),
-							new XElement("Alias", item.Alias),
-							new XElement("Definition", item.DataTypeKey),
-							new XElement("Type", item.PropertyEditorAlias),
-							new XElement("Mandatory", item.Mandatory != null ? item.Mandatory : ""),
-							new XElement("Validation", item.ValidationRegExp != null ? item.ValidationRegExp : ""),
-							new XElement("Description", new XCData(item.Description != null ? item.Description : "")),
-							new XElement("SortOrder", item.SortOrder),
-							new XElement("Tab", new XAttribute("Alias", tab.Alias), tab.Name),
-							new XElement("Variations", item.Variations != null ? item.Variations : ""),
-							new XElement("MandatoryMessage", item.MandatoryMessage != null ? item.MandatoryMessage : ""),
-							new XElement("ValidationRegExpMessage", item.ValidationRegExpMessage != null ? item.ValidationRegExpMessage : ""),
-							new XElement("LabelOnTop", item.LabelOnTop)
-							);
-						genericProperties.Add(genericProperty);
+						IEnumerable<IPropertyType>? getProperties = tab.PropertyTypes.OrderBy(x => x.Alias).ToList();
+						foreach (IPropertyType item in getProperties)
+						{
+							if (compositionAliases != null) if (item.Key == compositionAliases.CompositionPropertyTypes.FirstOrDefault().Key) continue;
+							XElement genericProperty = new XElement("GenericProperty",
+								new XElement("Key", item.Key),
+								new XElement("Name", item.Name),
+								new XElement("Alias", item.Alias),
+								new XElement("Definition", item.DataTypeKey),
+								new XElement("Type", item.PropertyEditorAlias),
+								new XElement("Mandatory", item.Mandatory != null ? item.Mandatory : ""),
+								new XElement("Validation", item.ValidationRegExp != null ? item.ValidationRegExp : ""),
+								new XElement("Description", new XCData(item.Description != null ? item.Description : "")),
+								new XElement("SortOrder", item.SortOrder),
+								new XElement("Tab", new XAttribute("Alias", tab.Alias), tab.Name),
+								new XElement("Variations", item.Variations != null ? item.Variations : ""),
+								new XElement("MandatoryMessage", item.MandatoryMessage != null ? item.MandatoryMessage : ""),
+								new XElement("ValidationRegExpMessage", item.ValidationRegExpMessage != null ? item.ValidationRegExpMessage : ""),
+								new XElement("LabelOnTop", item.LabelOnTop)
+								);
+							genericProperties.Add(genericProperty);
+						}
+
+						XElement tabContent =
+								new XElement("Tab",
+								new XElement("Key", tab.Key),
+								new XElement("Caption", tab.Name),
+								new XElement("Alias", tab.Alias),
+								new XElement("Type", tab.Type),
+								new XElement("SortOrder", tab.SortOrder));
+
+						tabDetail.Add(tabContent);
 					}
 
 					XElement? structure = new XElement("Structure");
@@ -98,13 +112,6 @@ namespace SyncData.Repository.Serializers
 					}
 					contentDetail.Add(structure);
 					contentDetail.Add(genericProperties);
-					XElement tabDetail =
-							new XElement("Tabs", new XElement("Tab",
-							new XElement("Key", tab.Key),
-							new XElement("Caption", tab.Name),
-							new XElement("Alias", tab.Alias),
-							new XElement("Type", tab.Type),
-							new XElement("SortOrder", tab.SortOrder)));
 					contentDetail.Add(tabDetail);
 					string folder = "cSync\\ContentType";
 					if (!Directory.Exists(folder))

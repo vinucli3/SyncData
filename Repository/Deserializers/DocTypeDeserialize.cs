@@ -100,7 +100,7 @@ namespace SyncData.Repository.Deserializers
 
 			IEnumerable<XElement>? allowedTemplate = info?.Element("AllowedTemplates").Elements();
 			string? templName = ""; string? templKey = "";
-			List<ITemplate?> masterDetail = null;
+			List<ITemplate?> masterDetail = new List<ITemplate?>();
 			ITemplate defaultTemplate = null;
 			if (!allowedTemplate.IsNullOrEmpty())
 			{
@@ -109,7 +109,7 @@ namespace SyncData.Repository.Deserializers
 					templName = template.Value ?? "";
 					templKey = template.Attribute("Key")?.Value ?? "";
 					masterDetail.Add(_fileService.GetTemplate(new Guid(templKey)));
-					if(defaultTemplateVal == templName)
+					if (defaultTemplateVal.Replace(" ", "") == templName)
 					{
 						defaultTemplate = _fileService.GetTemplate(new Guid(templKey));
 					}
@@ -170,29 +170,33 @@ namespace SyncData.Repository.Deserializers
 						string? mandatoryMessage = genericProperty?.Element("MandatoryMessage")?.Value ?? "";
 						string? validationRegExpMessage = genericProperty?.Element("ValidationRegExpMessage")?.Value ?? "";
 						string? labelOnTop = genericProperty?.Element("LabelOnTop")?.Value ?? "";
-
-						try
+						if (caption == tabName)
 						{
-							IDataType dt = _dataTypeService.GetDataType(new Guid(definition));
-							tabSet?.PropertyTypes?.Add(new PropertyType(_shortStringHelper, dt)
+							try
 							{
-								Key = new Guid(key),
-								Name = nameGp,
-								Alias = alias,
-								Mandatory = Convert.ToBoolean(mandatory),
-								Description = descriptionGp,
-								SortOrder = Convert.ToInt16(sortOrder),
-								Variations = (ContentVariation)Enum.Parse(typeof(ContentVariation), variationsGp),
-								MandatoryMessage = mandatoryMessage,
-								ValidationRegExpMessage = validationRegExpMessage,
-								LabelOnTop = Convert.ToBoolean(labelOnTop),
-								ValidationRegExp = validation
-							});
+								IDataType dt = _dataTypeService.GetDataType(new Guid(definition));
+								tabSet?.PropertyTypes?.Add(new PropertyType(_shortStringHelper, dt)
+								{
+									Key = new Guid(key),
+									Name = nameGp,
+									Alias = alias,
+									Mandatory = Convert.ToBoolean(mandatory),
+									Description = descriptionGp,
+									SortOrder = Convert.ToInt16(sortOrder),
+									Variations = (ContentVariation)Enum.Parse(typeof(ContentVariation), variationsGp),
+									MandatoryMessage = mandatoryMessage,
+									ValidationRegExpMessage = validationRegExpMessage,
+									LabelOnTop = Convert.ToBoolean(labelOnTop),
+									ValidationRegExp = validation,
+									DataTypeKey = dt.Key
+								});
+							}
+							catch (Exception ex)
+							{
+								//_logger.LogError("Create datatype error {ex}", ex);
+							}
 						}
-						catch (Exception ex)
-						{
-							//_logger.LogError("Create datatype error {ex}", ex);
-						}
+
 					}
 					if (tabSet is not null)
 						propColl.Add(tabSet);
@@ -244,11 +248,9 @@ namespace SyncData.Repository.Deserializers
 				{
 					compositionsToAdd.Add(myComp);
 				}
-				
-			
-					
 
-				IContentType newCT = _contentTypeService.Get(name);
+				IContentType newCT = _contentTypeService.Get(aliasVal);
+				var sds = _contentTypeService.GetAll();
 				if (newCT == null)
 				{
 					newCT = new ContentType(_shortStringHelper, container != null ? container.Id : -1)
@@ -281,7 +283,7 @@ namespace SyncData.Repository.Deserializers
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine(ex);
+				_logger.LogError("DocTypeDeserialize Serialize error {ex}", ex);
 			}
 		}
 
