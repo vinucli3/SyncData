@@ -34,6 +34,7 @@ namespace SyncData.Composers
 					// you can also use a direct path "../App_Plugins/my/long/url/to/view.html"
 					menuItemPubTo.AdditionalData.Add("actionView", "/App_Plugins/cSyncMaster/backoffice/syncAlias/publish.html");
 				menuItemPubTo.AdditionalData.Add("data", notification.NodeId);
+				menuItemPubTo.AdditionalData.Add("userEmail", _backOfficeSecurityAccessor.BackOfficeSecurity.CurrentUser.Email);
 				menuItemPubTo.AdditionalData["jsAction"] = "PublishDatacontroller.openCreateDialog";
 				menuItemPubTo.SeparatorBefore = true;
 				// sets the icon to icon-wine-glass

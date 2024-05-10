@@ -29,7 +29,7 @@ namespace SyncData.Composers
 			builder.Services.AddScoped<IMemberGroupSerialize, MemberGroupSerialize>();
 			builder.Services.AddScoped<IUsersSerialize, UsersSerialize>();
 			builder.Services.AddScoped<IUserGroupSerialize, UserGroupSerialize>();
-
+			builder.Services.AddScoped<IPublicAccessSerialize, PublicAccessSerialize>();
 			//Deserialize
 			builder.Services.AddScoped<IBlueprintDeserialize, BlueprintDeserialize>();
 			builder.Services.AddScoped<IContentDeserialize, ContentDeserialize>();

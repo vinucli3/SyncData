@@ -29,7 +29,7 @@ namespace SyncData.Repository
 {
 	public class UpdateContent : IUpdateContent
 	{
-		private IContentSerialize _contentSerialize;
+		private IContentSerialize _contentSerialize; 
 		private readonly ILogger<UpdateContent> _logger;
 		private readonly IPublishedContentQuery _publishedContent;
 		private readonly IMediaService _mediaService;
