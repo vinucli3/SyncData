@@ -20,7 +20,7 @@ namespace SyncData.Repository.Deserializers
 			_relationService = relationService;
 		}
 
-		public async Task<bool> Handler()
+		public async Task<bool> HandlerAsync()
 		{
 			try
 			{

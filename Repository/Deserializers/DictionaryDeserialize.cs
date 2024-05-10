@@ -19,7 +19,7 @@ namespace SyncData.Repository.Deserializers
 			_localizationService = localizationService;
 		}
 
-		public async Task<bool> Handler()
+		public async Task<bool> HandlerAsync()
 		{
 			try
 			{

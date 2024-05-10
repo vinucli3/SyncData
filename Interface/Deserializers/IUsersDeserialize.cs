@@ -2,6 +2,6 @@
 {
     public interface IUsersDeserialize
     {
-        public Task<bool> Handler();
+        public Task<bool> HandlerAsync();
     }
 }

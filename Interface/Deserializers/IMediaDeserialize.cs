@@ -2,6 +2,6 @@
 {
     public interface IMediaDeserialize
     {
-        public Task<bool> Handler();
+        public Task<bool> HandlerAsync();
     }
 }

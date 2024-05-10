@@ -2,6 +2,6 @@
 {
     public interface IDomainDeserialize
     {
-        public Task<bool> Handler();
+        public Task<bool> HandlerAsync();
     }
 }

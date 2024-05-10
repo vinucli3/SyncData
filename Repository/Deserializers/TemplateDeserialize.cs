@@ -31,7 +31,7 @@ namespace SyncData.Repository.Deserializers
 			_shortStringHelper = shortStringHelper;
 
 		}
-		public async Task<bool> Handler()
+		public async Task<bool> HandlerAsync()
 		{
 			try
 			{

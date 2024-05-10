@@ -1,7 +1,9 @@
-﻿namespace SyncData.Interface.Serializers
+﻿using SyncData.Model;
+
+namespace SyncData.Interface.Serializers
 {
     public interface IBlueprintSerialize : IDisposable
 	{
-        public Task<bool> Handler();
+        public Task<bool> HandlerAsync();
     }
 }

@@ -2,6 +2,6 @@
 {
     public interface IMediaTypeSerialize
     {
-		public Task<bool> Handler();
+		public Task<bool> HandlerAsync();
     }
 }

@@ -16,4 +16,6 @@
     <PackageReference Include="Umbraco.Cms.Core" Version="12.3.6" />
   </ItemGroup>
 
+  <ProjectExtensions><VisualStudio><UserProperties appsettings-schema_1umbraco_1cms_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>
+
 </Project>

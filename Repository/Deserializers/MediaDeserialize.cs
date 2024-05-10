@@ -47,7 +47,7 @@ namespace SyncData.Repository.Deserializers
 			//_contentService = contentService;
 		}
 
-		public async Task<bool> Handler()
+		public async Task<bool> HandlerAsync()
 		{
 			try
 			{

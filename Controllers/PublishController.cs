@@ -1,10 +1,7 @@
-﻿using Azure;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Microsoft.VisualBasic;
 using Newtonsoft.Json;
-using NUglify;
 using SyncData.Interface;
 using SyncData.Model;
 using System.Net;
@@ -12,18 +9,20 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Xml.Linq;
 using Umbraco.Cms.Core;
-using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.Persistence.Repositories;
 using Umbraco.Cms.Core.Services;
-using Umbraco.Cms.Infrastructure.Persistence.Querying;
 using Umbraco.Cms.Infrastructure.Scoping;
+using Umbraco.Cms.Web.BackOffice.Controllers;
 using Umbraco.Cms.Web.Common;
 using Umbraco.Cms.Web.Common.Attributes;
+using Umbraco.Cms.Web.Common.Authorization;
 using Umbraco.Cms.Web.Common.Controllers;
+
 
 namespace SyncData.Controllers
 {
+	
 	[PluginController("PublishContent")]
 	public class PublishController : UmbracoApiController
 	{
@@ -89,7 +88,7 @@ namespace SyncData.Controllers
 			//_memberSignInManager = memberSignInManager;
 		}
 
-		[AllowAnonymous]
+		//[Authorize]
 		[HttpGet]
 		public IActionResult HeartBeat([FromQuery] string url)
 		{
@@ -114,27 +113,27 @@ namespace SyncData.Controllers
 		}
 
 		[HttpGet]
-		public async Task<IActionResult> CollectNodeDetail()
+		public async Task<IActionResult> CollectNodeDetailAsync()
 		{
-			return Ok(await _updateContent.CollectExistingNodes());
+			return Ok(await _updateContent.CollectExistingNodesAsync());
 		}
 		[HttpPost]
-		public async Task<IActionResult> FindDifferences([FromBody] DiffXelements nodes)
+		public async Task<IActionResult> FindDifferencesAsync([FromBody] DiffXelements nodes)
 		{
-			return Ok(JsonConvert.SerializeObject(await _updateContent.FindDiffNodes(nodes)));
+			return Ok(JsonConvert.SerializeObject(await _updateContent.FindDiffNodesAsync(nodes)));
 		}
 
 		[HttpPost]
-		public async Task<IActionResult> ClearDifferences(DiffXelements source)
+		public async Task<IActionResult> ClearDifferencesAsync(DiffXelements source)
 		{
-			bool g = await _updateContent.SolveDifference(source.X1);
+			bool g = await _updateContent.SolveDifferenceAsync(source.X1);
 			return Ok(JsonConvert.SerializeObject(g));
 		}
-
+		
 		[HttpGet]
-		public async Task<IActionResult> GetNode([FromQuery] string id)
+		public async Task<IActionResult> GetNodeAsync([FromQuery] string id)
 		{
-			var elementPath = await _updateContent.ReadNode(new Guid(id));
+			var elementPath = await _updateContent.ReadNodeAsync(new Guid(id));
 			if (elementPath != "")
 			{
 				XElement response = XElement.Load(elementPath);
@@ -148,75 +147,75 @@ namespace SyncData.Controllers
 		}
 
 		[HttpPost]
-		public async Task<IActionResult> CreateNode(XElement source)
+		public async Task<IActionResult> CreateNodeAsync(XElement source)
 		{
-			bool g = await _updateContent.CreateNode(source);
+			bool g = await _updateContent.CreateNodeAsync(source);
 			return Ok();
 		}
 		[HttpPut]
-		public async Task<IActionResult> UpdateNode(XElement source)
+		public async Task<IActionResult> UpdateNodeAsync(XElement source)
 		{
-			bool g = await _updateContent.UpdateNode(source);
+			bool g = await _updateContent.UpdateNodeAsync(source);
 			return Ok();
 		}
 		[HttpDelete]
-		public async Task<IActionResult> DeleteNode(XElement source)
+		public async Task<IActionResult> DeleteNodeAsync(XElement source)
 		{
-			bool g = await _updateContent.DeleteNode(source);
+			bool g = await _updateContent.DeleteNodeAsync(source);
 			return Ok();
 		}
 
-		[HttpGet]
-		public IActionResult ImageProcess([FromQuery] Guid id)
-		{
-			try
-			{
-				var response = _updateContent.ImageProcess(id);
-				if (response == null)
-				{
-					return NotFound("No image found");
-				}
-				this._logger.LogInformation("Image Process Successfully");
-				return Ok(response);
-			}
-			catch (Exception ex)
-			{
-				_logger.LogError("Image Process got error from the controller {ex}", ex);
-				return NotFound(ex);
-			}
+		//[HttpGet]
+		//public IActionResult ImageProcess([FromQuery] Guid id)
+		//{
+		//	try
+		//	{
+		//		var response = _updateContent.ImageProcess(id);
+		//		if (response == null)
+		//		{
+		//			return NotFound("No image found");
+		//		}
+		//		this._logger.LogInformation("Image Process Successfully");
+		//		return Ok(response);
+		//	}
+		//	catch (Exception ex)
+		//	{
+		//		_logger.LogError("Image Process got error from the controller {ex}", ex);
+		//		return NotFound(ex);
+		//	}
 
-		}
-		[HttpPost]
-		public IActionResult ImageUpdate([FromBody] MediaNameKey imageSrc)
-		{
-			try
-			{
-				//var content = _contentService.GetRootContent().FirstOrDefault();
-				_updateContent.ImageUpdate(imageSrc);//, content.Id);
-				this._logger.LogInformation("Image updated Successfully");
-				return Ok("Successfully updated");
-			}
-			catch (Exception ex)
-			{
-				_logger.LogError("Image Update got error from the controller {ex}", ex);
-				return StatusCode(500, ex.InnerException.Message);
-			}
+		//}
+		//[HttpPost]
+		//public IActionResult ImageUpdate([FromBody] MediaNameKey imageSrc)
+		//{
+		//	try
+		//	{
+		//		//var content = _contentService.GetRootContent().FirstOrDefault();
+		//		_updateContent.ImageUpdate(imageSrc);//, content.Id);
+		//		this._logger.LogInformation("Image updated Successfully");
+		//		return Ok("Successfully updated");
+		//	}
+		//	catch (Exception ex)
+		//	{
+		//		_logger.LogError("Image Update got error from the controller {ex}", ex);
+		//		return StatusCode(500, ex.InnerException.Message);
+		//	}
 
-		}
-		[HttpPost]
-		public IActionResult UpdateContent([FromBody] TitleDto newValue)
-		{
-			try
-			{
-				//_updateContent.UpdateTitle(newValue.Value, newValue.Key);
-				this._logger.LogInformation("Title update Successfully");
-				return Ok("Successfully updated");
-			}
-			catch (Exception ex)
-			{
-				_logger.LogError("Title update got error from the controller {ex}", ex);
-				return NotFound();
-			}
+		//}
+		//[HttpPost]
+		//public IActionResult UpdateContent([FromBody] TitleDto newValue)
+		//{
+		//	try
+		//	{
+		//		//_updateContent.UpdateTitle(newValue.Value, newValue.Key);
+		//		this._logger.LogInformation("Title update Successfully");
+		//		return Ok("Successfully updated");
+		//	}
+		//	catch (Exception ex)
+		//	{
+		//		_logger.LogError("Title update got error from the controller {ex}", ex);
+		//		return NotFound();
+		//	}
 
 			//var parent = _contentService.GetById(1058);
 			//if (parent != null)
@@ -227,7 +226,7 @@ namespace SyncData.Controllers
 			//}
 			//else
 			//	return NotFound();
-		}
+		//}
 
 	}
 }

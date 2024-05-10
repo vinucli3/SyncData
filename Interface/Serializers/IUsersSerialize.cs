@@ -2,6 +2,6 @@
 {
     public interface IUsersSerialize
     {
-		public Task<bool> Handler();
+		public Task<bool> HandlerAsync();
     }
 }

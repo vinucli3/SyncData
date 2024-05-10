@@ -1,13 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SyncData.Interface.Serializers;
+using Umbraco.Cms.Web.BackOffice.Controllers;
 using Umbraco.Cms.Web.Common.Attributes;
 using Umbraco.Cms.Web.Common.Controllers;
 
 namespace SyncData.Controllers
 {
 	[PluginController("ExportContent")]
-	public class ExportController : UmbracoApiController
+	public class ExportController : UmbracoAuthorizedApiController
 	{
 		private IBlueprintSerialize _blueprintSerialize;
 		private IContentSerialize _contentSerialize;
@@ -74,87 +75,87 @@ namespace SyncData.Controllers
 
 		[AllowAnonymous]
 		[HttpGet]
-		public async Task<IActionResult> HeartBeat()
+		public async Task<IActionResult> HeartBeatAsync()
 		{
 			return new OkObjectResult(1);
 		}
 
 		[HttpGet]
-		public async Task<IActionResult> ExportBlueprint()
+		public async Task<IActionResult> ExportBlueprintAsync()
 		{
-			await _blueprintSerialize.Handler();
+			await _blueprintSerialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ExportContent()
+		public async Task<IActionResult> ExportContentAsync()
 		{
-			await _contentSerialize.Handler();
+			await _contentSerialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ExportDataType()
+		public async Task<IActionResult> ExportDataTypeAsync()
 		{
-			await _dataTypeSerialize.Handler();
+			await _dataTypeSerialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ExportDictionary()
+		public async Task<IActionResult> ExportDictionaryAsync()
 		{
-			await _dictionarySerialize.Handler();
+			await _dictionarySerialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ExportDocType()
+		public async Task<IActionResult> ExportDocTypeAsync()
 		{
-			await _docTypeSerialize.Handler();
+			await _docTypeSerialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ExportDomain()
+		public async Task<IActionResult> ExportDomainAsync()
 		{
-			await _domainSerialize.Handler();
+			await _domainSerialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ExportLanguage()
+		public async Task<IActionResult> ExportLanguageAsync()
 		{
-			await _languageSerialize.Handler();
+			await _languageSerialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ExportMacro()
+		public async Task<IActionResult> ExportMacroAsync()
 		{
-			await _macroSerialize.Handler();
+			await _macroSerialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ExportMedia()
+		public async Task<IActionResult> ExportMediaAsync()
 		{
-			await _mediaSerialize.Handler();
+			await _mediaSerialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ExportMediaType()
+		public async Task<IActionResult> ExportMediaTypeAsync()
 		{
-			await _mediaTypeSerialize.Handler();
+			await _mediaTypeSerialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ExportMemberType()
+		public async Task<IActionResult> ExportMemberTypeAsync()
 		{
-			await _memberTypeSerialize.Handler();
+			await _memberTypeSerialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ExportRelation()
+		public async Task<IActionResult> ExportRelationAsync()
 		{
-			await _relationSerialize.Handler();
+			await _relationSerialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ExportTemplate()
+		public async Task<IActionResult> ExportTemplateAsync()
 		{
-			await _templateSerialize.Handler();
+			await _templateSerialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		/// <summary>
@@ -162,27 +163,27 @@ namespace SyncData.Controllers
 		/// </summary>
 		/// <returns></returns>
 		[HttpGet]
-		public async Task<IActionResult> ExportUsers()
+		public async Task<IActionResult> ExportUsersAsync()
 		{
-			await _userSerialize.Handler();
+			await _userSerialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ExportUserGroups()
+		public async Task<IActionResult> ExportUserGroupsAsync()
 		{
-			await _userGroupsSerialize.Handler();
+			await _userGroupsSerialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ExportMembers()
+		public async Task<IActionResult> ExportMembersAsync()
 		{
-			await _membersSerialize.Handler();
+			await _membersSerialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ExportMemberGroups()
+		public async Task<IActionResult> ExportMemberGroupsAsync()
 		{
-			await _memberGroupsSerialize.Handler();
+			await _memberGroupsSerialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 

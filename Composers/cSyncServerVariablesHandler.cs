@@ -32,13 +32,14 @@ namespace SyncData.Composers
 				throw new ArgumentException("Invalid umbracoUrls");
 			}
 			var publish = _linkGenerator.GetUmbracoApiServiceBaseUrl<PublishController>(x => x.HeartBeat(""));
-			var export = _linkGenerator.GetUmbracoApiServiceBaseUrl<ExportController>(x => x.HeartBeat());
-			var import = _linkGenerator.GetUmbracoApiServiceBaseUrl<ImportController>(x => x.HeartBeat());
+			var export = _linkGenerator.GetUmbracoApiServiceBaseUrl<ExportController>(x => x.HeartBeatAsync());
+			var import = _linkGenerator.GetUmbracoApiServiceBaseUrl<ImportController>(x => x.HeartBeatAsync());
 			//serverVariables.Add("uSyncHistory", (object)mylink);
-
-			umbracoUrls["publishBaseUrl"] = publish;
-			umbracoUrls["exportBaseUrl"] = export;
-			umbracoUrls["importBaseUrl"] = import;
+			
+			umbracoUrls["publishBaseUrl"] = publish!;
+			umbracoUrls["exportBaseUrl"] = export!;
+			umbracoUrls["importBaseUrl"] = import!;
+			
 		}
 	}
 }

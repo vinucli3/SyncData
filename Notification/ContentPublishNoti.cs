@@ -25,8 +25,8 @@ namespace SyncData.Notification
 		{
 			try
 			{
-
-				_contentSerialize.Handler();
+				
+				_contentSerialize.HandlerAsync();
 				_logger.LogInformation("Export Content Complete");
 			}
 			catch (Exception ex)
@@ -49,7 +49,7 @@ namespace SyncData.Notification
 		{
 			try
 			{
-				_contentSerialize.Handler();
+				_contentSerialize.HandlerAsync();
 				_logger.LogInformation("Export Content Complete");
 			}
 			catch (Exception ex)
@@ -72,7 +72,7 @@ namespace SyncData.Notification
 		{
 			try
 			{
-				_contentSerialize.Handler();
+				_contentSerialize.HandlerAsync();
 				_logger.LogInformation("Export Content Complete");
 			}
 			catch (Exception ex)
@@ -96,7 +96,7 @@ namespace SyncData.Notification
 		{
 			try
 			{
-				_contentSerialize.Handler();
+				_contentSerialize.HandlerAsync();
 				_logger.LogInformation("Export Content Complete");
 			}
 			catch (Exception ex)
@@ -120,7 +120,7 @@ namespace SyncData.Notification
 			try
 			{
 				Array.ForEach(Directory.GetFiles("cSync\\Content\\"), File.Delete);
-				_contentSerialize.Handler();
+				_contentSerialize.HandlerAsync();
 				_logger.LogInformation("Export Content Complete");
 			}
 			catch (Exception ex)

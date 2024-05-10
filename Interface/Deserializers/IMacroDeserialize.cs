@@ -2,6 +2,6 @@
 {
     public interface IMacroDeserialize
     {
-		public Task<bool> Handler();
+		public Task<bool> HandlerAsync();
     }
 }

@@ -1,13 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SyncData.Interface.Deserializers;
+using Umbraco.Cms.Web.BackOffice.Controllers;
 using Umbraco.Cms.Web.Common.Attributes;
 using Umbraco.Cms.Web.Common.Controllers;
 
 namespace SyncData.Controllers
 {
 	[PluginController("ImportContent")]
-	public class ImportController : UmbracoApiController
+	public class ImportController : UmbracoAuthorizedApiController
 	{
 		private IBlueprintDeserialize _blueprintDeserialize;
 		private IContentDeserialize _contentDeserialize;
@@ -73,111 +74,111 @@ namespace SyncData.Controllers
 
 		[AllowAnonymous]
 		[HttpGet]
-		public async Task<IActionResult> HeartBeat()
+		public async Task<IActionResult> HeartBeatAsync()
 		{
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ImportBlueprint()
+		public async Task<IActionResult> ImportBlueprintAsync()
 		{
-			await _blueprintDeserialize.Handler();
+			await _blueprintDeserialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ImportContent()
+		public async Task<IActionResult> ImportContentAsync()
 		{
-			await _contentDeserialize.Handler();
+			await _contentDeserialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ImportDataType()
+		public async Task<IActionResult> ImportDataTypeAsync()
 		{
-			await _dataTypeDeserialize.Handler();
+			await _dataTypeDeserialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ImportDictionary()
+		public async Task<IActionResult> ImportDictionaryAsync()
 		{
-			await _dictionaryDeserialize.Handler();
+			await _dictionaryDeserialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ImportDocType()
+		public async Task<IActionResult> ImportDocTypeAsync()
 		{
-			await _docTypeDeserialize.Handler();
+			await _docTypeDeserialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ImportDomain()
+		public async Task<IActionResult> ImportDomainAsync()
 		{
-			await _domainDeserialize.Handler();
+			await _domainDeserialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ImportLanguage()
+		public async Task<IActionResult> ImportLanguageAsync()
 		{
-			await _languageDeserialize.Handler();
+			await _languageDeserialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ImportMacro()
+		public async Task<IActionResult> ImportMacroAsync()
 		{
-			await _macroDeserialize.Handler();
+			await _macroDeserialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ImportMedia()
+		public async Task<IActionResult> ImportMediaAsync()
 		{
-			await _mediaDeserialize.Handler();
+			await _mediaDeserialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ImportMediaType()
+		public async Task<IActionResult> ImportMediaTypeAsync()
 		{
-			await _mediaTypeDeserialize.Handler();
+			await _mediaTypeDeserialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ImportMemberType()
+		public async Task<IActionResult> ImportMemberTypeAsync()
 		{
-			await _memberTypeDeserialize.Handler();
+			await _memberTypeDeserialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ImportRelation()
+		public async Task<IActionResult> ImportRelationAsync()
 		{
-			await _relationDeserialize.Handler();
+			await _relationDeserialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ImportTemplate()
+		public async Task<IActionResult> ImportTemplateAsync()
 		{
-			await _templateDeserialize.Handler();
+			await _templateDeserialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		
 		[HttpGet]
-		public async Task<IActionResult> ImportUsers()
+		public async Task<IActionResult> ImportUsersAsync()
 		{
-			await _usersDeserialize.Handler();
+			await _usersDeserialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ImportUserGroups()
+		public async Task<IActionResult> ImportUserGroupsAsync()
 		{
-			await _userGroupDeserialize.Handler();
+			await _userGroupDeserialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ImportMembers()
+		public async Task<IActionResult> ImportMembersAsync()
 		{
-			await _memberDeserialize.Handler();
+			await _memberDeserialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 		[HttpGet]
-		public async Task<IActionResult> ImportMemberGroups()
+		public async Task<IActionResult> ImportMemberGroupsAsync()
 		{
-			await _memberGroupDeserialize.Handler();
+			await _memberGroupDeserialize.HandlerAsync();
 			return new OkObjectResult(1);
 		}
 	}

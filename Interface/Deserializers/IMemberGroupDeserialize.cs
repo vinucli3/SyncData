@@ -2,6 +2,6 @@
 {
     public interface IMemberGroupDeserialize
     {
-        public Task<bool> Handler();
+        public Task<bool> HandlerAsync();
     }
 }

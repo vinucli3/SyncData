@@ -34,7 +34,7 @@ namespace SyncData.Repository.Deserializers
 			_propertyEditorCollection = propertyEditorCollection;
 		}
 
-		public async Task<bool> Handler()
+		public async Task<bool> HandlerAsync()
 		{
 			try
 			{

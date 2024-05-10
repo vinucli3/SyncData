@@ -31,7 +31,7 @@ namespace SyncData.Repository.Deserializers
 			_fileService = fileService;
 		}
 
-		public async Task<bool> Handler()
+		public async Task<bool> HandlerAsync()
 		{
 			try
 			{

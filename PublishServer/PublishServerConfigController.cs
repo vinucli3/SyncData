@@ -15,7 +15,7 @@ namespace SyncData.PublishServer
 			=> _efCoreScopeProvider = efCoreScopeProvider;
 
 		[HttpGet]
-		public async Task<IActionResult> All()
+		public async Task<IActionResult> AllAsync()
 		{
 			using IEfCoreScope<ServerContext> scope = _efCoreScopeProvider.CreateScope();
 			IEnumerable<ServerModel> comments = await scope.ExecuteWithContextAsync(async db => db.serverPublishConfig.ToArray());
@@ -24,7 +24,7 @@ namespace SyncData.PublishServer
 		}
 
 		[HttpGet]
-		public async Task<IActionResult> GetComments(Guid umbracoNodeKey)
+		public async Task<IActionResult> GetCommentsAsync(Guid umbracoNodeKey)
 		{
 			using IEfCoreScope<ServerContext> scope = _efCoreScopeProvider.CreateScope();
 			IEnumerable<ServerModel> comments = await scope.ExecuteWithContextAsync(async db =>
@@ -36,7 +36,7 @@ namespace SyncData.PublishServer
 		}
 
 		[HttpPost]
-		public async Task InsertComment(ServerModel comment)
+		public async Task InsertCommentAsync(ServerModel comment)
 		{
 			using IEfCoreScope<ServerContext> scope = _efCoreScopeProvider.CreateScope();
 

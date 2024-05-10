@@ -27,7 +27,7 @@ namespace SyncData.Repository.Deserializers
 			_memberService = memberService;
 		}
 
-		public async Task<bool> Handler()
+		public async Task<bool> HandlerAsync()
 		{
 			try
 			{

@@ -41,7 +41,7 @@ namespace SyncData.Repository.Deserializers
 			_scopeprovider = scopeProvider;
 			_memberGroupService = memberGroupService;
 		}
-		public async Task<bool> Handler()
+		public async Task<bool> HandlerAsync()
 		{
 			try
 			{
@@ -72,7 +72,7 @@ namespace SyncData.Repository.Deserializers
 				fileList = fyles.ToList();
 				foreach (string file in fyles)
 				{
-					creatContent(file);
+					await creatContentAsync(file);
 				}
 				return true;
 			}
@@ -83,7 +83,7 @@ namespace SyncData.Repository.Deserializers
 			}
 		}
 		List<string> fileList = new List<string>();
-		public async Task creatContent(string file)
+		public async Task creatContentAsync(string file)
 		{
 			XElement response = XElement.Load(file);
 			XElement? root = new XElement(response.Name, response.Attributes());
@@ -115,7 +115,7 @@ namespace SyncData.Repository.Deserializers
 					string? d = parentnameVal.Replace(" ", "").ToLower();
 					if (c == d)
 					{
-						creatContent(item);
+						await creatContentAsync(item);
 					}
 				}
 			}
@@ -211,6 +211,10 @@ namespace SyncData.Repository.Deserializers
 			{
 				_contentService.MoveToRecycleBin(newContent);
 			}
+		}
+		public async Task<bool> SingleHandlerAsync(XElement source)
+		{
+			return true;
 		}
 	}
 }

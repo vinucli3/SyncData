@@ -28,7 +28,7 @@ namespace SyncData.Repository.Serializers
 			_memberTypeServices = memberTypeService;
 		}
 
-		public async Task<bool> Handler()
+		public async Task<bool> HandlerAsync()
 		{
 			try
 			{
@@ -133,6 +133,18 @@ namespace SyncData.Repository.Serializers
 					string path = "cSync\\MemberTypes\\" + memberType.Alias?.Replace(" ", " -").ToLower() + ".config";
 					memberDetail.Save(path);
 				}
+				return true;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError("MemberTypeSerialize Serialize error {ex}", ex);
+				return false;
+			}
+		}
+		public async Task<bool> SingleHandlerAsync(IMemberType memberType)
+		{
+			try
+			{
 				return true;
 			}
 			catch (Exception ex)

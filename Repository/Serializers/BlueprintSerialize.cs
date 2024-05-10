@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using SyncData.Interface.Serializers;
+using SyncData.Model;
 using System.Xml.Linq;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Persistence.Querying;
@@ -33,11 +34,11 @@ namespace SyncData.Repository.Serializers
 			_scopeprovider = scopeProvider;
 			_fileService = fileService;
 		}
-		public async Task<bool> Handler()
+		public async Task<bool> HandlerAsync()
 		{
 			try
 			{
-
+				List<AcknowDTO> listAcknowDTO = new List<AcknowDTO>();
 				var allPubUnPubContent = new List<IContent>();
 				var rootNodes = _contentService.GetRootContent();
 
@@ -57,8 +58,11 @@ namespace SyncData.Repository.Serializers
 					allPubUnPubContent.Select(x => x.ContentTypeId).ToArray()).ToList();
 				if (!bluePrints.IsCollectionEmpty())
 				{
+
 					foreach (IContent blueprint in bluePrints)
 					{
+						AcknowDTO acknowDTO=new AcknowDTO();
+						
 						XElement blueprintDetail = new XElement("Content",
 												new XAttribute("Key", blueprint.Key),
 												new XAttribute("Level", blueprint.Level),

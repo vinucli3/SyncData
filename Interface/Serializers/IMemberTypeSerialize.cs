@@ -2,6 +2,6 @@
 {
     public interface IMemberTypeSerialize
     {
-		public Task<bool> Handler();
+		public Task<bool> HandlerAsync();
     }
 }

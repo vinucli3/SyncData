@@ -27,7 +27,7 @@ namespace SyncData.Repository.Serializers
 			_logger = logger;
 			_localizationService = localizationService;
 		}
-		public async Task<bool> Handler()
+		public async Task<bool> HandlerAsync()
 		{
 			try
 			{

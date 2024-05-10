@@ -24,7 +24,7 @@ namespace SyncData.Repository.Serializers
 			_logger = logger;
 			_memberGroupService = memberGroupService;
 		}
-		public async Task<bool> Handler()
+		public async Task<bool> HandlerAsync()
 		{
 			try
 			{

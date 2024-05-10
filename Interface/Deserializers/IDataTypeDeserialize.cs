@@ -2,6 +2,6 @@
 {
     public interface IDataTypeDeserialize
     {
-        public Task<bool> Handler();
+        public Task<bool> HandlerAsync();
     }
 }

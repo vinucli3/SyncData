@@ -2,6 +2,6 @@
 {
     public interface ILanguageSerialize
     {
-		public Task<bool> Handler();
+		public Task<bool> HandlerAsync();
     }
 }

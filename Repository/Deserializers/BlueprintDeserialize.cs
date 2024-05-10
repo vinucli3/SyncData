@@ -35,7 +35,7 @@ namespace SyncData.Repository.Deserializers
 		}
 
 		List<string> fileList = new List<string>();
-		public async Task<bool> Handler()
+		public async Task<bool> HandlerAsync()
 		{
 			try
 			{
