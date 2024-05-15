@@ -1,6 +1,5 @@
-﻿using Azure;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http.HttpResults;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using NUglify;
@@ -8,8 +7,11 @@ using SyncData.Interface;
 using SyncData.Interface.Deserializers;
 using SyncData.Interface.Serializers;
 using SyncData.Model;
-using SyncData.Repository.Deserializers;
-using SyncData.Repository.Serializers;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Xml;
 using System.Xml.Linq;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.IO;
@@ -19,17 +21,14 @@ using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Strings;
 using Umbraco.Cms.Infrastructure.Persistence.Querying;
 using Umbraco.Cms.Infrastructure.Scoping;
-using Umbraco.Extensions;
-using static Lucene.Net.Search.FieldValueHitQueue;
-using static Umbraco.Cms.Core.Collections.TopoGraph;
-using static Umbraco.Cms.Core.Constants.Conventions;
 
 
 namespace SyncData.Repository
 {
 	public class UpdateContent : IUpdateContent
 	{
-		private IContentSerialize _contentSerialize; 
+
+		private IContentSerialize _contentSerialize;
 		private readonly ILogger<UpdateContent> _logger;
 		private readonly IPublishedContentQuery _publishedContent;
 		private readonly IMediaService _mediaService;
@@ -45,7 +44,10 @@ namespace SyncData.Repository
 		private IMemberGroupService _memberGroupService;
 		List<DiffObject> diffArray = new List<DiffObject>();
 		private IRelationService _relationService;
-		public UpdateContent(IContentSerialize contentSerialize,
+		private IHttpClientFactory _httpFactory { get; set; }
+		public UpdateContent(
+			IHttpClientFactory httpClientFactory,
+			IContentSerialize contentSerialize,
 			IPublishedContentQuery publishedContent,
 			IMediaService mediaService,
 			IWebHostEnvironment webHostEnvironment,
@@ -76,171 +78,9 @@ namespace SyncData.Repository
 			_fileService = fileService;
 			_memberGroupService = memberGroupService;
 			_relationService = relationService;
+			_httpFactory = httpClientFactory;
 		}
-		//public async Task<MediaNameKey> ImageProcess(Guid id)
-		//{
-		//	MediaNameKey imageNameKey = new MediaNameKey();
-		//	try
-		//	{
-		//		var content = _publishedContent.Content(id);
-		//		MediaWithCrops? imgProp = content.Value("image") as MediaWithCrops;
-		//		if (imgProp == null)
-		//		{
-		//			return null;
-		//		}
-		//		var medias = _mediaService.GetRootMedia().Where(x => x.Key == imgProp.Key).FirstOrDefault();
-		//		if (imgProp != null)
-		//		{
-		//			var ds = _mediaService.GetById(imgProp.Key);
-		//			if (ds != null)
-		//			{
-		//				var umbracoFile = ds.GetValue<string>(Constants.Conventions.Media.File);
-		//				var sds = JsonConvert.DeserializeObject<MediaNameKey>(umbracoFile);
-		//				umbracoFile = Path.Combine(this._webHostEnvironment.WebRootPath + sds.Src);
-		//				byte[] imageArray = System.IO.File.ReadAllBytes(umbracoFile);
-		//				string base64ImageRepresentation = Convert.ToBase64String(imageArray);
-		//				if (base64ImageRepresentation != null)
-		//				{
-		//					imageNameKey.Key = imgProp.Key;
-		//					imageNameKey.SortOrder = imgProp.SortOrder;
-		//					imageNameKey.Level = imgProp.Level;
-		//					imageNameKey.Parent = imgProp.Parent != null ? imgProp.Parent.Key : Guid.Empty;
-		//					imageNameKey.Name = imgProp.Name;
-		//					imageNameKey.Path = JsonConvert.DeserializeObject<MediaNameKey>(medias.Properties.FirstOrDefault().Values.FirstOrDefault().EditedValue.ToString()).Src;
-		//					imageNameKey.Src = base64ImageRepresentation;
-		//					imageNameKey.ContentType = imgProp.ContentType.Alias.ToString();
-		//					imageNameKey.NodeID = content.Key;
-		//				}
-		//			}
-		//		}
-		//		_logger.LogInformation("Image Process Successfull");
-		//	}
-		//	catch (Exception ex)
-		//	{
-		//		_logger.LogError("Image Processing Error with exception {ex}", ex);
-		//	}
-		//	return imageNameKey;
-		//}
-		//public async Task ImageUpdate(MediaNameKey imageSrc)//, int id)
-		//{
-		//	string? mediaPath = _webHostEnvironment.MapPathWebRoot("~/media");
-		//	IMedia? _media = _mediaService.GetRootMedia().Where(x => x.Key == imageSrc.Key).FirstOrDefault();
 
-		//	if (_media == null)
-		//	{
-		//		_logger.LogError("create image");
-		//		bool success = await SaveImage(imageSrc.Src, imageSrc.Name, imageSrc.Path.Remove(0, 1).Replace("/", "\\"));
-		//		if (success)
-		//		{
-		//			string pth = Path.Combine(this._webHostEnvironment.WebRootPath, imageSrc.Path.Remove(0, 1).Replace("/", "\\"));
-		//			using (Stream stream = System.IO.File.OpenRead(pth))
-		//			{
-		//				var parentMedia = _mediaService.GetRootMedia().Where(x => x.Key == imageSrc.Parent).FirstOrDefault();
-		//				int parent = -1;
-		//				if (parentMedia != null)
-		//				{
-		//					parent = parentMedia.Id;
-		//				}
-
-		//				IMedia media = _mediaService.CreateMedia(imageSrc.Name + ".jpg", parent, imageSrc.ContentType);
-		//				media.SetValue(Constants.Conventions.Media.File, imageSrc.Path);
-		//				media.Key = imageSrc.Key;
-		//				media.Level = Convert.ToInt32(imageSrc.Level);
-		//				media.SortOrder = Convert.ToInt32(imageSrc.SortOrder);
-		//				var result = _mediaService.Save(media);
-
-		//				var node = _contentService.GetById(imageSrc.NodeID);
-		//				List<ImageProp> newMedia = new List<ImageProp>();
-		//				IProperty? a = node.Properties.Where(x => x.PropertyType.Name == "Image").FirstOrDefault();
-		//				ImageProp? b = JsonConvert.DeserializeObject<ImageProp>(a.Values.FirstOrDefault().EditedValue.ToString().Replace("[", "").Replace("]", ""));
-		//				if (b == null)
-		//				{
-		//					b = new ImageProp();
-		//					b.Key = a.Key.ToString();
-		//				}
-		//				b.MediaKey = media.Key.ToString();
-		//				newMedia.Add(b);
-		//				if (parent != null)
-		//				{
-		//					node?.SetValue("Image", JsonConvert.SerializeObject(newMedia));
-		//				}
-		//				_contentService.SaveAndPublish(node);
-		//			}
-		//			_logger.LogInformation("Image Update Successfull");
-		//		}
-		//		else
-		//		{
-		//			_logger.LogError("Create image error");
-		//		}
-		//	}
-		//	else
-		//	{
-
-		//		//var content = _publishedContent.Content(imageSrc.NodeID);
-		//		//MediaWithCrops? tr = content.Value("image") as MediaWithCrops;
-		//		//if (tr?.Name == imageSrc.Name)
-		//		//{
-		//		//	return;
-		//		//}
-		//		_logger.LogError("image exist");
-		//		IContent? node = _contentService.GetById(imageSrc.NodeID);
-		//		IMedia? media = _mediaService.GetById(_media.Id);
-		//		List<ImageProp> newMedia = new List<ImageProp>();
-		//		IProperty? a = node.Properties.Where(x => x.PropertyType.Name == "Image").FirstOrDefault();
-		//		ImageProp? b = new ImageProp();
-		//		_logger.LogInformation("qweqwew {a}", a.Values.FirstOrDefault().EditedValue.ToString());
-
-		//		b = JsonConvert.DeserializeObject<ImageProp>(a.Values.FirstOrDefault().EditedValue.ToString().Replace("[", "").Replace("]", ""));
-		//		if (b == null)
-		//		{
-		//			b = new ImageProp();
-		//		}
-
-		//		b.Key = a.Key.ToString();
-		//		b.MediaKey = media.Key.ToString();
-		//		newMedia.Add(b);
-		//		_logger.LogInformation("Here {newMedia}", newMedia[0].Key);
-
-		//		if (node != null)
-		//		{
-		//			node?.SetValue("Image", JsonConvert.SerializeObject(newMedia));
-		//			_contentService.SaveAndPublish(node);
-		//		}
-		//		else
-		//		{
-		//			_logger.LogError("no content");
-		//		}
-
-		//	}
-		//}
-		//public async Task<bool> SaveImage(string ImgStr, string ImgName, string path)
-		//{
-		//	var pathSpl = path.Split("\\");
-		//	String srcpath = Path.Combine(this._webHostEnvironment.WebRootPath, pathSpl[0], pathSpl[1]);
-		//	//Check if directory exist
-		//	if (!Directory.Exists(srcpath))
-		//	{
-		//		Directory.CreateDirectory(srcpath); //Create directory if it doesn't exist
-		//	}
-		//	string imageName = ImgName + ".jpg";
-		//	//set the image path
-		//	string imgPath = Path.Combine(srcpath, pathSpl[2]);
-		//	byte[] imageBytes = Convert.FromBase64String(ImgStr);
-		//	System.IO.File.WriteAllBytes(imgPath, imageBytes);
-		//	return true;
-		//}
-		//public async Task<bool> UpdateTitle(string Title, Guid id)
-		//{
-		//	var parent = _contentService.GetById(id);
-		//	if (parent != null)
-		//	{
-		//		parent?.SetValue("title", Title);
-		//		_contentService.SaveAndPublish(parent);
-		//		return true;
-		//	}
-		//	else
-		//		return false;
-		//}
 		public async Task<List<ContentDto>> CollectExistingNodesAsync()
 		{
 			var allPubUnPubContent = new List<IContent>();
@@ -266,14 +106,16 @@ namespace SyncData.Repository
 			}
 			return listCont;
 		}
-		public async Task<List<DiffObject>> FindDiffNodesAsync(DiffXelements nodes)
+		public async Task<List<DiffObject>> FindDiffNodesAsync(UpdateDTO idKey)
 		{
 			try
 			{
-
-
-				XElement X1 = nodes.X1; // XElement.Parse(stringWithXmlGoesHere)
-				XElement X2 = nodes.X2;
+				XElement source = await ReadNodeAsync(new Guid(idKey.Id));
+				_logger.LogInformation("A1");
+				XElement remote = await RemoteReadNodeAsync(idKey);
+				_logger.LogInformation("A2");
+				XElement X1 = source; // XElement.Parse(stringWithXmlGoesHere)
+				XElement X2 = remote;
 				//var children1 = X1.Elements().Elements().ToList();
 				//var children2 = X2.Elements().Elements().ToList();
 				var children1 = X1.Elements().ToList();
@@ -342,7 +184,8 @@ namespace SyncData.Repository
 					}
 				}
 			}
-			catch(Exception ex) {
+			catch (Exception ex)
+			{
 				_logger.LogError("Compare error {ex}", ex);
 			}
 			return diffArray;
@@ -397,45 +240,40 @@ namespace SyncData.Repository
 			}
 			return diffArray;
 		}
-		public async Task<bool> SolveDifferenceAsync(XElement source)
+		public async Task<bool> SolveDifferenceAsync(UpdateDTO idKey)
 		{
-			XElement? root = new XElement(source.Name, source.Attributes());
-			string? keyVal = root?.Attribute("Key")?.Value;
-
-			string mainPath = "cSync\\Content";
-			string[] files = Directory.GetFiles(mainPath);
-			foreach (string file in files)
+			var source = await ReadNodeAsync(new Guid(idKey.Id));
+			string jsonData = JsonConvert.SerializeObject(source);
+			using (HttpClient client = new HttpClient())
 			{
-				XElement response = XElement.Load(file);
-				XElement? desroot = new XElement(response.Name, response.Attributes());
-
-				string? deskeyVal = desroot?.Attribute("Key")?.Value;
-				if (keyVal == deskeyVal)
+				HttpResponseMessage response = new HttpResponseMessage();
+				if (idKey.Action == "Update")
 				{
-					System.IO.File.Delete(file);
-					_logger.LogInformation("Delete {file}", file);
-					var nodeName = source?.Element("Info")?.Element("NodeName")?.Attribute("Default")?.Value;
-					response = source;
-					string path = "cSync\\Content\\" + nodeName?.Replace(" ", "-").ToLower() + ".config";
-					if (!Directory.Exists(file))
-					{
-						response?.Save(path);
-						_logger.LogInformation("Save {file}", file);
-					}
-					else
-					{
-						_logger.LogInformation("File exist {file}", file);
-					}
+					string url = idKey.Url + "umbraco/publishcontent/publish/UpdateNode";
+					HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Put, url);
+					request.Content = new StringContent(jsonData, Encoding.UTF8, "application/json");
 
-					break;
+					response = await client.SendAsync(request);
 				}
+				else if (idKey.Action == "Create")
+				{
+					string url = idKey.Url + "umbraco/publishcontent/publish/CreateNode";
+					HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, url);
+					request.Content = new StringContent(jsonData, Encoding.UTF8, "application/json");
 
+					response = await client.SendAsync(request);
+
+				}
+				// Handling response
+				if (response.IsSuccessStatusCode)
+					return true;
+				else
+					return false;
 			}
-			await _contentDeserialize.HandlerAsync();
-			return true;
 		}
-		public async Task<string> ReadNodeAsync(Guid id)
+		public async Task<XElement> ReadNodeAsync(Guid id)
 		{
+			XElement response = null;
 			var allPubUnPubContent = new List<IContent>();
 			var rootNodes = _contentService.GetRootContent();
 
@@ -459,8 +297,8 @@ namespace SyncData.Repository
 
 			foreach (string file in fyles)
 			{
-				XElement response = XElement.Load(file);
-				XElement? root = new XElement(response.Name, response.Attributes());
+				XElement fileExist = XElement.Load(file);
+				XElement? root = new XElement(fileExist.Name, fileExist.Attributes());
 
 				string? keyVal = root.Attribute("Key").Value;
 				if (id == new Guid(keyVal))
@@ -469,8 +307,34 @@ namespace SyncData.Repository
 				}
 			}
 			//string path = "cSync\\Content\\" + node.Name?.Replace(" ", "-").ToLower() + ".config";
+			//var elementPath = await _updateContent.ReadNodeAsync(new Guid(id));
+			if (path != "")
+			{
+				response = XElement.Load(path);
+			}
+			return response;
 
-			return path;
+		}
+		public async Task<XElement> RemoteReadNodeAsync(UpdateDTO idKey)
+		{
+			XElement? data = null;
+			var client = _httpFactory.CreateClient("HttpWeb");
+			client.BaseAddress = new Uri(idKey.Url + "umbraco/publishcontent/publish/");
+			var response = await client.GetStringAsync("GetNode?id=" + idKey.Id).ConfigureAwait(false);
+			if (response == "New Node")
+			{
+				response = "{ \"Content\": \"\" }";
+			}
+			try
+			{
+				XmlDocument doc = (XmlDocument)JsonConvert.DeserializeXmlNode(response);
+				data = doc.DocumentElement.GetXElement();
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError("RemoteReadNodeAsync {ex}", ex);
+			}
+			return data;
 
 		}
 		public async Task<bool> CreateNodeAsync(XElement source)
@@ -500,7 +364,6 @@ namespace SyncData.Repository
 			var existTempl = source.Element("Info")?.Element("Template").Value;
 
 			var node = _contentService.GetById(new Guid(keyVal));
-
 			if (node.Trashed == false && Convert.ToBoolean(trashed) == true)
 			{
 				_logger.LogInformation("move to recyclebin");
@@ -539,17 +402,14 @@ namespace SyncData.Repository
 						nodpr.SetValue(memberGRp.Id);
 				}
 				else
-				nodpr.SetValue(prop.Value);
+					nodpr.SetValue(prop.Value);
 			}
-
-			
-
 
 			if (new Guid(parentKeyVal) != Guid.Empty)
 			{
 				IContent? parentNode = _contentService.GetById(new Guid(parentKeyVal));
 				node.ParentId = parentNode.Id;
-				
+
 			}
 			node.Name = nodeName;
 			node.SortOrder = Convert.ToInt16(sortOrder);
@@ -566,8 +426,6 @@ namespace SyncData.Repository
 				_contentService.SaveAndPublish(node);
 			else
 				_contentService.Save(node);
-
-			
 
 			ContentScheduleCollection? contentScheduleCollection = new ContentScheduleCollection();
 			List<XElement>? schedule = source.Element("Info").Element("Schedule").Elements().ToList();
@@ -589,23 +447,56 @@ namespace SyncData.Repository
 				}
 				_contentService.Save(node, contentSchedule: contentScheduleCollection);
 			}
-			
 
-			
 
 
 			return true;
 		}
-		public async Task<bool> DeleteNodeAsync(XElement source)
+		public async Task<bool> DeleteNodeAsync(UpdateDTO idKey)
 		{
-			string? keyVal = source?.Attribute("Key")?.Value;
-			var node = _contentService.GetById(new Guid(keyVal));
-			if (node == null)
+			var client = _httpFactory.CreateClient("HttpWeb");
+			client.BaseAddress = new Uri(idKey.Url + "umbraco/publishcontent/publish/");
+			var guids = await client.GetStringAsync("CollectNodes?id=" + idKey.Id).ConfigureAwait(false);
+			var remote = JsonConvert.DeserializeObject<List<Guid>>(guids);
+			var local = await CollectAllNodes(new Guid(idKey.Id));
+			var list3 = remote.Except(local).ToList();
+
+			string jsonData = JsonConvert.SerializeObject(list3);
+			using (HttpClient client1 = new HttpClient())
 			{
-				_contentService.Delete(node);
+				HttpResponseMessage response = new HttpResponseMessage();
+				string url = idKey.Url + "umbraco/publishcontent/publish/DeleteNodeRemote";
+				HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, url);
+				request.Content = new StringContent(jsonData, Encoding.UTF8, "application/json");
+				response = await client1.SendAsync(request);
+
 			}
 
 			return true;
+		}
+		public async Task<bool> DeleteRemoteAsync([FromBody] List<Guid> nodekeys)
+		{
+			foreach (var nodekey in nodekeys)
+			{
+				var node = _contentService.GetById(nodekey);
+				if (node != null)
+				{
+					_contentService.MoveToRecycleBin(node);
+				}
+			}
+
+			return true;
+		}
+		public async Task<List<Guid>> CollectAllNodes(Guid id)
+		{
+			List<Guid> nodes = new List<Guid>();
+			var cont = _contentService.GetById(id);
+			var allChildNodes = _contentService.GetPagedChildren(cont.Id, 0, 100, out long count);
+			foreach (var child in allChildNodes)
+			{
+				nodes.Add(child.Key);
+			}
+			return nodes;
 		}
 	}
 }

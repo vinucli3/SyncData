@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using SyncData.Interface;
 using SyncData.Model;
+using SyncData.PublishServer;
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -11,8 +12,8 @@ using System.Xml.Linq;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.Persistence.Repositories;
+using Umbraco.Cms.Core.Scoping;
 using Umbraco.Cms.Core.Services;
-using Umbraco.Cms.Infrastructure.Scoping;
 using Umbraco.Cms.Web.BackOffice.Controllers;
 using Umbraco.Cms.Web.Common;
 using Umbraco.Cms.Web.Common.Attributes;
@@ -46,6 +47,7 @@ namespace SyncData.Controllers
 		private IMediaTypeService _mediaTypeService;
 		private readonly IMemberTypeService _memberTypeServices;
 		private IDomainService _domainService;
+		private IHttpClientFactory _httpFactory { get; set; }
 
 		public PublishController(
 			 IContentService contentService,
@@ -64,7 +66,8 @@ namespace SyncData.Controllers
 			 ILocalizationService localizationService,
 			 IMediaTypeService mediaTypeService,
 			 IMemberTypeService memberTypeService,
-			 IDomainService domainService
+			 IDomainService domainService,
+			 IHttpClientFactory httpClientFactory
 			 )
 		{
 			_contentService = contentService;
@@ -84,60 +87,79 @@ namespace SyncData.Controllers
 			_mediaTypeService = mediaTypeService;
 			_memberTypeServices = memberTypeService;
 			_domainService = domainService;
-
-			//_memberSignInManager = memberSignInManager;
+			_httpFactory = httpClientFactory;
 		}
 
 		//[Authorize]
 		[HttpGet]
-		public IActionResult HeartBeat([FromQuery] string url)
+		public async Task<List<HeartBeatDTO>> HeartBeat()
 		{
-			try
-			{
-				_logger.LogInformation(url);
-				//Creating the HttpWebRequest
-				HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
-				//Setting the Request method HEAD, you can also use GET too.
-				request.Method = "HEAD";
-				//Getting the Web Response.
-				HttpWebResponse response = request.GetResponse() as HttpWebResponse;
-				//Returns TRUE if the Status code == 200
-				response.Close();
-				return Ok(HttpStatusCode.OK);
+			List<HeartBeatDTO> heartBeatDTO = new List<HeartBeatDTO>();
+			
+				using (var scope = _scopeProvider.CreateScope(autoComplete: true))
+				{
+					// build a query to select everything the people table
+					var sql = scope.SqlContext.Sql().Select("*").From("serverModel");
+					var host = HttpContext.Request.Host;
+					// fetch data from the database with the query and map to the Person class
+					List<ServerModel>? allServers = scope.Database.Fetch<ServerModel>(sql);
+				foreach (var item in allServers)
+				{
+					HeartBeatDTO beatDTO = new HeartBeatDTO();
+					beatDTO.Server = item.Url;
+					beatDTO.Name = item.Name;
+					//_logger.LogInformation(url);
+					//Creating the HttpWebRequest
+					try
+					{
+						HttpWebRequest request = WebRequest.Create(item.Url.Replace("https","http")) as HttpWebRequest;
+						//Setting the Request method HEAD, you can also use GET too.
+						request.Method = "checkConnection";
+						//Getting the Web Response.
+						HttpWebResponse response = request.GetResponse() as HttpWebResponse;
+						//Returns TRUE if the Status code == 200
+						response.Close();
+						beatDTO.Status = 0;
+					}
+					catch
+					{
+						//Any exception will returns false.
+						beatDTO.Status = 1;
+					}
+					heartBeatDTO.Add(beatDTO);
+				}
+				return heartBeatDTO;
 			}
-			catch
-			{
-				//Any exception will returns false.
-				return Ok(HttpStatusCode.NotFound);
-			}
+			
 		}
-
+		public async Task<IActionResult> checkConnection()
+		{
+			return Ok();
+		}
 		[HttpGet]
 		public async Task<IActionResult> CollectNodeDetailAsync()
 		{
 			return Ok(await _updateContent.CollectExistingNodesAsync());
 		}
 		[HttpPost]
-		public async Task<IActionResult> FindDifferencesAsync([FromBody] DiffXelements nodes)
+		public async Task<IActionResult> FindDifferencesAsync([FromBody] UpdateDTO idKey)
 		{
-			return Ok(JsonConvert.SerializeObject(await _updateContent.FindDiffNodesAsync(nodes)));
+			return Ok(JsonConvert.SerializeObject(await _updateContent.FindDiffNodesAsync(idKey)));
 		}
-
 		[HttpPost]
-		public async Task<IActionResult> ClearDifferencesAsync(DiffXelements source)
+		public async Task<IActionResult> NodeUpdateAsync([FromBody] UpdateDTO idKey)
 		{
-			bool g = await _updateContent.SolveDifferenceAsync(source.X1);
+			
+			bool g = await _updateContent.SolveDifferenceAsync(idKey);
 			return Ok(JsonConvert.SerializeObject(g));
 		}
-		
 		[HttpGet]
 		public async Task<IActionResult> GetNodeAsync([FromQuery] string id)
 		{
-			var elementPath = await _updateContent.ReadNodeAsync(new Guid(id));
-			if (elementPath != "")
+			var element= await _updateContent.ReadNodeAsync(new Guid(id));
+			if (element != null)
 			{
-				XElement response = XElement.Load(elementPath);
-				return Ok(JsonConvert.SerializeObject(response));
+				return Ok(JsonConvert.SerializeObject(element));
 			}
 			else
 			{
@@ -145,7 +167,6 @@ namespace SyncData.Controllers
 			}
 
 		}
-
 		[HttpPost]
 		public async Task<IActionResult> CreateNodeAsync(XElement source)
 		{
@@ -153,81 +174,30 @@ namespace SyncData.Controllers
 			return Ok();
 		}
 		[HttpPut]
-		public async Task<IActionResult> UpdateNodeAsync(XElement source)
+		public async Task<IActionResult> UpdateNodeAsync([FromBody] XElement xElement)
 		{
-			bool g = await _updateContent.UpdateNodeAsync(source);
+			_logger.LogInformation("======================%%%");
+			bool g = await _updateContent.UpdateNodeAsync(xElement);
+			_logger.LogInformation("C {g}",g);
 			return Ok();
 		}
-		[HttpDelete]
-		public async Task<IActionResult> DeleteNodeAsync(XElement source)
+		[HttpPost]
+		public async Task<IActionResult> DeleteNodeAsync(UpdateDTO source)
 		{
 			bool g = await _updateContent.DeleteNodeAsync(source);
 			return Ok();
 		}
-
-		//[HttpGet]
-		//public IActionResult ImageProcess([FromQuery] Guid id)
-		//{
-		//	try
-		//	{
-		//		var response = _updateContent.ImageProcess(id);
-		//		if (response == null)
-		//		{
-		//			return NotFound("No image found");
-		//		}
-		//		this._logger.LogInformation("Image Process Successfully");
-		//		return Ok(response);
-		//	}
-		//	catch (Exception ex)
-		//	{
-		//		_logger.LogError("Image Process got error from the controller {ex}", ex);
-		//		return NotFound(ex);
-		//	}
-
-		//}
-		//[HttpPost]
-		//public IActionResult ImageUpdate([FromBody] MediaNameKey imageSrc)
-		//{
-		//	try
-		//	{
-		//		//var content = _contentService.GetRootContent().FirstOrDefault();
-		//		_updateContent.ImageUpdate(imageSrc);//, content.Id);
-		//		this._logger.LogInformation("Image updated Successfully");
-		//		return Ok("Successfully updated");
-		//	}
-		//	catch (Exception ex)
-		//	{
-		//		_logger.LogError("Image Update got error from the controller {ex}", ex);
-		//		return StatusCode(500, ex.InnerException.Message);
-		//	}
-
-		//}
-		//[HttpPost]
-		//public IActionResult UpdateContent([FromBody] TitleDto newValue)
-		//{
-		//	try
-		//	{
-		//		//_updateContent.UpdateTitle(newValue.Value, newValue.Key);
-		//		this._logger.LogInformation("Title update Successfully");
-		//		return Ok("Successfully updated");
-		//	}
-		//	catch (Exception ex)
-		//	{
-		//		_logger.LogError("Title update got error from the controller {ex}", ex);
-		//		return NotFound();
-		//	}
-
-			//var parent = _contentService.GetById(1058);
-			//if (parent != null)
-			//{
-			//	parent?.SetValue("title", newValue);
-			//	_contentService.SaveAndPublish(parent);
-			//	return Ok("Successfully updated");
-			//}
-			//else
-			//	return NotFound();
-		//}
-
+		[HttpDelete]
+		public async Task<IActionResult> DeleteNodeRemoteAsync([FromBody] List<Guid> source)
+		{
+			bool g = await _updateContent.DeleteRemoteAsync(source);
+			return Ok();
+		}
+		[HttpGet]
+		public async Task<List<Guid>> CollectNodes([FromQuery] string id)
+		{
+			return await _updateContent.CollectAllNodes(new Guid(id));
+		}
 	}
 }
 

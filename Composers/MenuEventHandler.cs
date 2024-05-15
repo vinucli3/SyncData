@@ -1,4 +1,6 @@
-﻿using Umbraco.Cms.Core.Events;
+﻿using Microsoft.Extensions.Logging;
+using SyncData.Controllers;
+using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Models.Trees;
 using Umbraco.Cms.Core.Notifications;
 using Umbraco.Cms.Core.Security;
@@ -8,10 +10,11 @@ namespace SyncData.Composers
 	internal class MenuEventHandler : INotificationHandler<MenuRenderingNotification>
 	{
 		private readonly IBackOfficeSecurityAccessor _backOfficeSecurityAccessor;
-
-		public MenuEventHandler(IBackOfficeSecurityAccessor backOfficeSecurityAccessor)
+		private readonly ILogger<MenuEventHandler> _logger;
+		public MenuEventHandler(IBackOfficeSecurityAccessor backOfficeSecurityAccessor, ILogger<MenuEventHandler> logger)
 		{
 			_backOfficeSecurityAccessor = backOfficeSecurityAccessor;
+			_logger = logger;
 		}
 
 		public void Handle(MenuRenderingNotification notification)
@@ -20,9 +23,8 @@ namespace SyncData.Composers
 			if(notification.NodeId == "-20")
 			{
 				return;
-			}			// for all content tree nodes
-			if (notification.TreeAlias.Equals("content") &&
-				_backOfficeSecurityAccessor.BackOfficeSecurity.CurrentUser.IsAdmin())
+			}
+			if (notification.TreeAlias.Equals("content") || notification.TreeAlias.Equals("media"))
 			{
 				// Creates a menu action that will open /umbraco/currentSection/itemAlias.html
 				var menuItemPubTo = new MenuItem("publishto", "Publish To...");
@@ -41,7 +43,6 @@ namespace SyncData.Composers
 				menuItemPubTo.Icon = "arrow-right";
 				// insert at index 5
 				notification.Menu.Items.Insert(3, menuItemPubTo);
-
 				//var menuItemPulFrm = new MenuItem("pullfrom", "Pull Content...");
 
 				// optional, if you don't want to follow the naming conventions, but do want to use a angular view
@@ -51,7 +52,7 @@ namespace SyncData.Composers
 				//menuItemPulFrm.AdditionalData["jsAction"] = "PublishDatacontroller.openCreateDialog";
 				//menuItemPulFrm.SeparatorBefore = true;
 				// sets the icon to icon-wine-glass
-				
+
 				//menuItemPulFrm.Icon = "arrow-left";
 				// insert at index 5
 				//notification.Menu.Items.Insert(3, menuItemPulFrm);

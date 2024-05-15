@@ -1,4 +1,5 @@
-﻿using SyncData.Model;
+﻿using Microsoft.AspNetCore.Mvc;
+using SyncData.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,12 +16,15 @@ namespace SyncData.Interface
         //public bool SaveImage(string ImgStr, string ImgName, string Path);
         //public bool UpdateTitle(string Title, Guid id);
 		public Task<List<ContentDto>> CollectExistingNodesAsync();
-		public Task<string> ReadNodeAsync(Guid id);
-		public Task<List<DiffObject>> FindDiffNodesAsync(DiffXelements nodes);
-        public Task<bool> SolveDifferenceAsync(XElement source);
+		public Task<XElement> ReadNodeAsync(Guid id);
+		public Task<List<DiffObject>> FindDiffNodesAsync(UpdateDTO nodes);
+        public Task<bool> SolveDifferenceAsync(UpdateDTO source);
 		public Task<bool> UpdateNodeAsync(XElement source);
 		public Task<bool> CreateNodeAsync(XElement source);
-		public Task<bool> DeleteNodeAsync(XElement source);
+		public Task<bool> DeleteNodeAsync(UpdateDTO source);
+		public Task<XElement> RemoteReadNodeAsync(UpdateDTO updateDTO);
+		public Task<List<Guid>> CollectAllNodes(Guid id);
+		public Task<bool> DeleteRemoteAsync( List<Guid> nodekeys);
 	}
 	
 }

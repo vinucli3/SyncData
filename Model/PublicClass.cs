@@ -56,9 +56,20 @@ namespace SyncData.Model
 	public class AcknowDTO
 	{
 		public string Item { get; set; }
-		public int ItemCount { get; set; }
-		public int ItemChanges { get; set; }
-		public int ItemErrors { get; set; }
+		public int ItemSuccessCount { get; set; }
+		public int ItemErrorCount { get; set; }
+	}
+	public class HeartBeatDTO
+	{
+		public string Server { get; set; }
+		public int Status { get; set; }
+		public string Name { get; set; }
+	}
 
+	public class UpdateDTO
+	{
+		public string Id { get; set; }
+		public string Url { get; set; }
+		public string Action { get; set; }
 	}
 }
