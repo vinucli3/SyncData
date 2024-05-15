@@ -5,13 +5,14 @@ using SyncData.Interface;
 using SyncData.Notification;
 using SyncData.PublishServer;
 using SyncData.Repository;
+using SyncData.TableCreation.syncMasterServerConfigTable;
 using System;
 using Umbraco.Cms.Core.Composing;
 using Umbraco.Cms.Core.Notifications;
 
 namespace SyncData.Composers
 {
-	internal class NotificationComposer : IComposer
+    internal class NotificationComposer : IComposer
 	{
 		
         public void Compose(IUmbracoBuilder builder)
@@ -21,13 +22,19 @@ namespace SyncData.Composers
 			builder.Services.AddScoped<IUpdateContent, UpdateContent>();
 			builder.AddNotificationHandler<ContentSavedNotification, ContentPublishNoti>();
 			builder.AddNotificationHandler<MenuRenderingNotification, MenuEventHandler>();
-			builder.Services.AddUmbracoDbContext<ServerContext>(options =>
+            builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunPublisherModelMigration>();
+            builder.Services.AddUmbracoDbContext<ServerContext>(options =>
 			{
 				options.UseSqlServer(conString);
 				//If you are using SQlite, replace UseSqlServer with UseSqlite
 			});
-			builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunServerModelsMigration>();
+
+            builder.Services.AddUmbracoDbContext<syncMasterPublisherContext>(options =>
+            {
+                options.UseSqlServer(conString);
+                //If you are using SQlite, replace UseSqlServer with UseSqlite
+            });
+            builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunServerModelsMigration>();
 		}
 	}
 }
-	
